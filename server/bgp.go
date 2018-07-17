@@ -77,12 +77,12 @@ func (bs *bgpServer) exportFilter(c *config.Config) (*filter.Filter, error) {
 			[]*filter.TermCondition{
 				filter.NewTermConditionWithRouteFilters(routeFilters...),
 			},
-			[]filter.FilterAction{
+			[]filter.Action{
 				&actions.AcceptAction{},
 			}),
 		filter.NewTerm(
 			[]*filter.TermCondition{},
-			[]filter.FilterAction{
+			[]filter.Action{
 				&actions.RejectAction{},
 			}),
 	}
@@ -91,22 +91,22 @@ func (bs *bgpServer) exportFilter(c *config.Config) (*filter.Filter, error) {
 }
 
 func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPServer) error {
-	p, err := bs.peerForSession(sess)
+	p, err := bs.peerForSession(sess, f)
 	if err != nil {
 		return err
 	}
 
-	b.AddPeer(p, bs.rib)
+	b.AddPeer(p)
 	return nil
 }
 
-func (bs *bgpServer) peerForSession(sess *config.Session) (bconfig.Peer, error) {
+func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bconfig.Peer, error) {
 	ip, err := bs.parseIP(sess.IP)
 	if err != nil {
 		return bconfig.Peer{}, fmt.Errorf("could not parse IP for session %s: %v", sess.Name, err)
 	}
 
-	return bconfig.Peer{
+	p := bconfig.Peer{
 		AdminEnabled:      true,
 		PeerAS:            sess.RemoteAS,
 		PeerAddress:       ip,
@@ -114,9 +114,21 @@ func (bs *bgpServer) peerForSession(sess *config.Session) (bconfig.Peer, error) 
 		HoldTime:          time.Second * 90,
 		KeepAlive:         time.Second * 30,
 		Passive:           true,
-		ImportFilter:      filter.NewDrainFilter(),
-		IPv6:              !ip.IsIPv4(),
-	}, nil
+	}
+
+	addressFamily := &bconfig.AddressFamilyConfig{
+		RIB:          bs.rib,
+		ExportFilter: f,
+		ImportFilter: filter.NewDrainFilter(),
+	}
+
+	if ip.IsIPv4() {
+		p.IPv4 = addressFamily
+	} else {
+		p.IPv6 = addressFamily
+	}
+
+	return p, nil
 }
 
 func (bs *bgpServer) parseIP(str string) (bnet.IP, error) {

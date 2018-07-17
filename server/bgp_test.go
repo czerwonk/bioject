@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bio-routing/bio-rd/routingtable/locRIB"
+
 	bconfig "github.com/bio-routing/bio-rd/config"
 	bnet "github.com/bio-routing/bio-rd/net"
 	"github.com/bio-routing/bio-rd/route"
@@ -137,6 +139,9 @@ func TestExportFilter(t *testing.T) {
 }
 
 func TestPeerForSession(t *testing.T) {
+	exportFilter := filter.NewDrainFilter()
+	rib := locRIB.New()
+
 	tests := []struct {
 		name     string
 		session  *config.Session
@@ -157,7 +162,11 @@ func TestPeerForSession(t *testing.T) {
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
 				Passive:           true,
-				ImportFilter:      filter.NewDrainFilter(),
+				IPv4: &bconfig.AddressFamilyConfig{
+					ImportFilter: filter.NewDrainFilter(),
+					ExportFilter: exportFilter,
+					RIB:          rib,
+				},
 			},
 		},
 		{
@@ -175,17 +184,22 @@ func TestPeerForSession(t *testing.T) {
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
 				Passive:           true,
-				ImportFilter:      filter.NewDrainFilter(),
-				IPv6:              true,
+				IPv6: &bconfig.AddressFamilyConfig{
+					ImportFilter: filter.NewDrainFilter(),
+					ExportFilter: exportFilter,
+					RIB:          rib,
+				},
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			bs := &bgpServer{}
+			bs := &bgpServer{
+				rib: rib,
+			}
 
-			p, err := bs.peerForSession(test.session)
+			p, err := bs.peerForSession(test.session, exportFilter)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -18,7 +18,7 @@
     "routingtable/filter/actions",
     "routingtable/locRIB"
   ]
-  revision = "86f17a1f2e78c8cd7e4cb8438b54201827a07f75"
+  revision = "6a15247f8f194c53d9f0bd1109a8bc666aa0451c"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -74,6 +74,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "8cebcecaf32ba51355a51732f3ea4a41d11897a37899783068a38548dff169bf"
+  inputs-digest = "684c112458c8ec5d956c86fd448e95edbd4d7c507eca47f1dcb3cb737c1ee9b3"
   solver-name = "gps-cdcl"
   solver-version = 1

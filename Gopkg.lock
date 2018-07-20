@@ -18,7 +18,7 @@
     "routingtable/filter/actions",
     "routingtable/locRIB"
   ]
-  revision = "6a15247f8f194c53d9f0bd1109a8bc666aa0451c"
+  revision = "55cf3d2a381ce5667e30aae86c4b56af8ac66fd6"
 
 [[projects]]
   name = "github.com/davecgh/go-spew"
@@ -54,7 +54,7 @@
   branch = "master"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
-  revision = "a49355c7e3f8fe157a85be2f77e6e269a0f89602"
+  revision = "a2144134853fc9a27a7b1e3eb4f19f1a76df13c9"
 
 [[projects]]
   branch = "master"

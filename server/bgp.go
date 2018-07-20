@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/bio-routing/bio-rd/routingtable/locRIB"
@@ -29,7 +28,7 @@ func newBGPserver() *bgpServer {
 func (bs *bgpServer) start(c *config.Config) error {
 	b := bgp.NewBgpServer()
 
-	routerID, err := bs.parseIP(c.RouterID)
+	routerID, err := bnet.IPFromString(c.RouterID)
 	if err != nil {
 		return fmt.Errorf("could not parse router id: %v", err)
 	}
@@ -62,7 +61,7 @@ func (bs *bgpServer) exportFilter(c *config.Config) (*filter.Filter, error) {
 
 	routeFilters := make([]*filter.RouteFilter, len(c.Filters))
 	for i, f := range c.Filters {
-		net, err := bs.parseIP(f.Net)
+		net, err := bnet.IPFromString(f.Net)
 		if err != nil {
 			return nil, err
 		}
@@ -101,7 +100,7 @@ func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPSe
 }
 
 func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bconfig.Peer, error) {
-	ip, err := bs.parseIP(sess.IP)
+	ip, err := bnet.IPFromString(sess.IP)
 	if err != nil {
 		return bconfig.Peer{}, fmt.Errorf("could not parse IP for session %s: %v", sess.Name, err)
 	}
@@ -129,18 +128,4 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bco
 	}
 
 	return p, nil
-}
-
-func (bs *bgpServer) parseIP(str string) (bnet.IP, error) {
-	ip := net.ParseIP(str)
-	if ip == nil {
-		return bnet.IP{}, fmt.Errorf("%s is not a valid IP address", str)
-	}
-
-	ip4 := ip.To4()
-	if ip4 != nil {
-		return bnet.IPFromBytes(ip4)
-	}
-
-	return bnet.IPFromBytes(ip.To16())
 }

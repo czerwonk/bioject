@@ -17,6 +17,7 @@ const version = "0.1"
 
 func main() {
 	configFile := flag.String("config-file", "config.yml", "Path to config file")
+	listenAddress := flag.String("listen-address", ":1337", "Listen address to listen for GRPC calls")
 	v := flag.Bool("v", false, "Show version info")
 
 	if *v {
@@ -29,12 +30,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = server.Start(cfg)
+	err = server.Start(cfg, *listenAddress)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	select {}
 }
 
 func showVersion() {

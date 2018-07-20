@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+message Result {
+    uint32 code = 1;
+    string message = 2;
+}
+
+message AddRouteRequest {
+    Route route = 1;
+    repeated Community communities = 2;
+    repeated LargeCommunity large_communities = 3;
+}
+
+message WithdrawRouteRequest {
+    Route route = 1;
+}
+
+message Route {
+    Prefix prefix = 1;
+    bytes next_hop = 2;
+}
+
+message Prefix {
+    bytes ip = 1;
+    uint32 length = 2;
+}
+
+message Community {
+    uint32 asn = 1;
+    uint32 value = 2;
+}
+
+message LargeCommunity {
+    uint32 global_administrator = 1;
+    uint32 local_data_part1 = 2;
+    uint32 local_data_part2 = 3;
+}
+
+service BioJectService {
+    rpc AddRoute (AddRouteRequest) returns (Result) {}
+    rpc WithdrawRoute (WithdrawRouteRequest) returns (Result) {}
+}

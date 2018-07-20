@@ -10,7 +10,7 @@ type Server struct {
 }
 
 // Start starts the server listening for BGP and API calls
-func Start(c *config.Config) error {
+func Start(c *config.Config, listenAddress string) error {
 	bgp := newBGPserver()
 
 	err := bgp.start(c)
@@ -19,5 +19,6 @@ func Start(c *config.Config) error {
 	}
 
 	log.Info("BGP server started")
-	return nil
+
+	return startAPIServer(listenAddress)
 }

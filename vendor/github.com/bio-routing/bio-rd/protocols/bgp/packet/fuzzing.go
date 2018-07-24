@@ -1,8 +1,14 @@
-// +build gofuzz
+// +build go fuzz
 
 package packet
 
-import "bytes"
+import (
+	"bytes"
+
+	"github.com/bio-routing/bio-rd/protocols/bgp/packet"
+
+	"github.com/bio-routing/bio-rd/protocols/bgp/types"
+)
 
 const (
 	INC_PRIO = 1
@@ -11,15 +17,30 @@ const (
 )
 
 func Fuzz(data []byte) int {
-
 	buf := bytes.NewBuffer(data)
-	msg, err := Decode(buf)
-	if err != nil {
-		if msg != nil {
-			panic("msg != nil on error")
+	for _, option := range getAllDecodingOptions() {
+		msg, err := Decode(buf, &option)
+		if err != nil {
+			if msg != nil {
+				panic("msg != nil on error")
+			}
+
 		}
-		return KEEP
+
+		return INC_PRIO
 	}
 
-	return INC_PRIO
+	return KEEP
+}
+
+func getAllDecodingOptions() []DecodeOptions {
+	parameters := []bool{true, false}
+	var ret []DecodeOptions
+	for _, octet := range parameters {
+		ret = append(ret, DecodeOptions{
+			Use32BitASN: octet
+		})
+	}
+
+	return ret
 }

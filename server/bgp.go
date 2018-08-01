@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bio-routing/bio-rd/route"
 	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 
 	bconfig "github.com/bio-routing/bio-rd/config"
@@ -20,9 +21,18 @@ type bgpServer struct {
 }
 
 func newBGPserver() *bgpServer {
-	return &bgpServer{
+	s := &bgpServer{
 		rib: locRIB.New(),
 	}
+
+	go func() {
+		for {
+			time.Sleep(10 * time.Second)
+			fmt.Printf("Route count: %d\n", s.rib.RouteCount())
+		}
+	}()
+
+	return s
 }
 
 func (bs *bgpServer) start(c *config.Config) error {
@@ -128,4 +138,12 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bco
 	}
 
 	return p, nil
+}
+
+func (bs *bgpServer) addPath(pfx bnet.Prefix, p *route.Path) error {
+	return bs.rib.AddPath(pfx, p)
+}
+
+func (bs *bgpServer) removePath(pfx bnet.Prefix, p *route.Path) bool {
+	return bs.rib.RemovePath(pfx, p)
 }

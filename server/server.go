@@ -20,5 +20,5 @@ func Start(c *config.Config, listenAddress string) error {
 
 	log.Info("BGP server started")
 
-	return startAPIServer(listenAddress)
+	return startAPIServer(listenAddress, bgp)
 }

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
 
 	"google.golang.org/grpc"
 
@@ -13,7 +14,10 @@ import (
 	pb "github.com/czerwonk/bioject/proto"
 )
 
-const successCode = 200
+const (
+	successCode = 200
+	version     = "0.1"
+)
 
 func main() {
 	apiAddress := flag.String("api", "[::1]:1337", "address to the bioject GRPPC API")
@@ -21,8 +25,14 @@ func main() {
 	nextHop := flag.String("next-hop", "", "next hop IP")
 	community := flag.String("community", "", "community to tag the route with")
 	withdraw := flag.Bool("withdraw", false, "withdraws route instead of adding it")
+	v := flag.Bool("v", false, "Show version info")
 
 	flag.Parse()
+
+	if *v {
+		showVersion()
+		os.Exit(0)
+	}
 
 	conn, err := grpc.Dial(*apiAddress, grpc.WithInsecure())
 	if err != nil {
@@ -35,6 +45,12 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+}
+
+func showVersion() {
+	fmt.Println("biojecter - Simle client for bioject route injector")
+	fmt.Println("Version:", version)
+	fmt.Println("Author(s): Daniel Czerwonk")
 }
 
 func sendRequest(client pb.BioJectServiceClient, prefix, nextHop, community string, withdraw bool) error {

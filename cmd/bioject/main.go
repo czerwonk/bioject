@@ -20,6 +20,8 @@ func main() {
 	listenAddress := flag.String("listen-address", ":1337", "Listen address to listen for GRPC calls")
 	v := flag.Bool("v", false, "Show version info")
 
+	flag.Parse()
+
 	if *v {
 		showVersion()
 		os.Exit(0)
@@ -37,7 +39,7 @@ func main() {
 }
 
 func showVersion() {
-	fmt.Println("bioject - Route Injector based on BIO Routing Daemon")
+	fmt.Println("bioject - Route injector based on BIO routing daemon")
 	fmt.Println("Version:", version)
 	fmt.Println("Author(s): Daniel Czerwonk")
 }

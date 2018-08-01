@@ -11,20 +11,18 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/czerwonk/bioject/api"
 	pb "github.com/czerwonk/bioject/proto"
 )
 
-const (
-	successCode = 200
-	version     = "0.1"
-)
+const version = "0.1"
 
 func main() {
-	apiAddress := flag.String("api", "[::1]:1337", "address to the bioject GRPPC API")
-	prefix := flag.String("prefix", "", "prefix")
-	nextHop := flag.String("next-hop", "", "next hop IP")
-	community := flag.String("community", "", "community to tag the route with")
-	withdraw := flag.Bool("withdraw", false, "withdraws route instead of adding it")
+	apiAddress := flag.String("api", "[::1]:1337", "Address to the bioject GRPPC API")
+	prefix := flag.String("prefix", "", "Prefix")
+	nextHop := flag.String("next-hop", "", "Next hop IP")
+	community := flag.String("community", "", "Community to tag the route with")
+	withdraw := flag.Bool("withdraw", false, "Withdraws route instead of adding it")
 	v := flag.Bool("v", false, "Show version info")
 
 	flag.Parse()
@@ -100,7 +98,7 @@ func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, 
 		return err
 	}
 
-	if res.Code != successCode {
+	if res.Code != api.StatusCodeOK {
 		return fmt.Errorf("Error #%d: %s", res.Code, res.Message)
 	}
 
@@ -120,7 +118,7 @@ func sendWithdraw(client pb.BioJectServiceClient, prefix *pb.Prefix, nextHop net
 		return err
 	}
 
-	if res.Code != successCode {
+	if res.Code != api.StatusCodeOK {
 		return fmt.Errorf("Error #%d: %s", res.Code, res.Message)
 	}
 

@@ -12,5 +12,6 @@
 *.out
 
 cmd/bioject/bioject
-cmd/biojectc/biojectc
 cmd/bioject/config.yml
+cmd/bioject/routes.db
+cmd/biojecter/biojecter

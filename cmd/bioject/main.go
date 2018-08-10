@@ -11,6 +11,8 @@ import (
 
 	"github.com/czerwonk/bioject/config"
 	"github.com/czerwonk/bioject/server"
+
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 const version = "0.1"
@@ -18,6 +20,7 @@ const version = "0.1"
 func main() {
 	configFile := flag.String("config-file", "config.yml", "Path to config file")
 	listenAddress := flag.String("listen-address", ":1337", "Listen address to listen for GRPC calls")
+	dbFile := flag.String("db-file", "routes.db", "Path to the database persisting routes")
 	v := flag.Bool("v", false, "Show version info")
 
 	flag.Parse()
@@ -32,7 +35,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = server.Start(cfg, *listenAddress)
+	err = server.Start(cfg, *listenAddress, *dbFile)
 	if err != nil {
 		log.Fatal(err)
 	}

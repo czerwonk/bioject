@@ -13,6 +13,7 @@ import (
 	"github.com/bio-routing/bio-rd/route"
 
 	"github.com/czerwonk/bioject/api"
+	"github.com/czerwonk/bioject/database"
 	pb "github.com/czerwonk/bioject/proto"
 
 	log "github.com/sirupsen/logrus"
@@ -25,16 +26,20 @@ type bgpService interface {
 
 type apiServer struct {
 	bgp bgpService
+	db  *database.Database
 }
 
-func startAPIServer(listenAddress string, bgp bgpService) error {
+func startAPIServer(listenAddress string, bgp bgpService, db *database.Database) error {
 	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterBioJectServiceServer(s, &apiServer{bgp})
+	pb.RegisterBioJectServiceServer(s, &apiServer{
+		bgp: bgp,
+		db:  db,
+	})
 
 	reflection.Register(s)
 
@@ -63,6 +68,10 @@ func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.
 		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
 
+	if err := s.db.Save(convertToDatabaseRoute(pfx, p)); err != nil {
+		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
+	}
+
 	log.Infof("Added route: %s via %s\n", pfx, p.BGPPath.NextHop)
 	return &pb.Result{Code: api.StatusCodeOK}, nil
 }
@@ -82,6 +91,10 @@ func (s *apiServer) WithdrawRoute(ctx context.Context, req *pb.WithdrawRouteRequ
 
 	if !s.bgp.removePath(pfx, p) {
 		return s.errorResult(api.StatusCodeProcessingError, "did not remove path"), nil
+	}
+
+	if err := s.db.Delete(convertToDatabaseRoute(pfx, p)); err != nil {
+		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
 
 	log.Infof("Removed route: %s via %s\n", pfx, p.BGPPath.NextHop)

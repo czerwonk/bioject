@@ -63,10 +63,10 @@ func sendRequest(client pb.BioJectServiceClient, prefix, nextHop, community stri
 	}
 
 	if withdraw {
-		return sendWithdraw(client, pfx, nextHopIP)
+		return sendWithdraw(client, pfx, ipBytes(nextHopIP))
 	}
 
-	return sendUpdate(client, pfx, nextHopIP, community)
+	return sendUpdate(client, pfx, ipBytes(nextHopIP), community)
 }
 
 func parsePrefix(s string) (*pb.Prefix, error) {
@@ -78,9 +78,18 @@ func parsePrefix(s string) (*pb.Prefix, error) {
 	ones, _ := net.Mask.Size()
 
 	return &pb.Prefix{
-		Ip:     ip,
+		Ip:     ipBytes(ip),
 		Length: uint32(ones),
 	}, nil
+}
+
+func ipBytes(ip net.IP) []byte {
+	b := ip.To4()
+	if b == nil {
+		b = ip.To16()
+	}
+
+	return b
 }
 
 func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, community string) error {

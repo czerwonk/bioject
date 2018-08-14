@@ -13,16 +13,9 @@ type Server struct {
 }
 
 // Start starts the server listening for BGP and API calls
-func Start(c *config.Config, listenAddress, dbFile string) error {
-	bgp := newBGPserver()
-
-	db, err := database.Connect("sqlite3", dbFile)
-	if err != nil {
-		return fmt.Errorf("could not connect to database: %v", err)
-	}
-	defer db.Close()
-
-	err = bgp.start(c)
+func Start(c *config.Config, listenAddress string, db *database.Database, metrics *Metrics) error {
+	bgp := newBGPserver(metrics)
+	err := bgp.start(c)
 	if err != nil {
 		return fmt.Errorf("could not start BGP speaker: %v", err)
 	}
@@ -34,7 +27,7 @@ func Start(c *config.Config, listenAddress, dbFile string) error {
 		return fmt.Errorf("could not restore routes: %v", err)
 	}
 
-	return startAPIServer(listenAddress, bgp, db)
+	return startAPIServer(listenAddress, bgp, db, metrics)
 }
 
 func restoreRoutes(bgp *bgpServer, db *database.Database) error {

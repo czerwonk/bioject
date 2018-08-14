@@ -29,18 +29,19 @@ type apiServer struct {
 	db  *database.Database
 }
 
-func startAPIServer(listenAddress string, bgp bgpService, db *database.Database) error {
+func startAPIServer(listenAddress string, bgp bgpService, db *database.Database, metrics *Metrics) error {
 	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)
 	}
 
-	s := grpc.NewServer()
-	pb.RegisterBioJectServiceServer(s, &apiServer{
+	api := &apiServer{
 		bgp: bgp,
 		db:  db,
-	})
+	}
 
+	s := grpc.NewServer()
+	pb.RegisterBioJectServiceServer(s, newMetricAPIAdapter(api, metrics))
 	reflection.Register(s)
 
 	log.Println("Starting API server on", listenAddress)
@@ -72,7 +73,6 @@ func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.
 		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
 
-	log.Infof("Added route: %s via %s\n", pfx, p.BGPPath.NextHop)
 	return &pb.Result{Code: api.StatusCodeOK}, nil
 }
 
@@ -97,7 +97,6 @@ func (s *apiServer) WithdrawRoute(ctx context.Context, req *pb.WithdrawRouteRequ
 		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
 
-	log.Infof("Removed route: %s via %s\n", pfx, p.BGPPath.NextHop)
 	return &pb.Result{Code: api.StatusCodeOK}, nil
 }
 

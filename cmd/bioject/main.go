@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/czerwonk/bioject/config"
+	"github.com/czerwonk/bioject/database"
 	"github.com/czerwonk/bioject/server"
 
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -35,10 +36,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = server.Start(cfg, *listenAddress, *dbFile)
+	metrics := server.NewMetrics()
+	metrics.RegisterEndpoint(":9500")
+
+	db, err := database.Connect("sqlite3", *dbFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("could not connect to database: %v", err)
 	}
+	defer db.Close()
+
+	log.Fatal(server.Start(cfg, *listenAddress, db, metrics))
 }
 
 func showVersion() {

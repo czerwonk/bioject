@@ -6,6 +6,7 @@ import (
 
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/bio-routing/bio-rd/routingtable/locRIB"
+	log "github.com/sirupsen/logrus"
 
 	bconfig "github.com/bio-routing/bio-rd/config"
 	bnet "github.com/bio-routing/bio-rd/net"
@@ -17,20 +18,15 @@ import (
 )
 
 type bgpServer struct {
-	rib *locRIB.LocRIB
+	rib     *locRIB.LocRIB
+	metrics *Metrics
 }
 
-func newBGPserver() *bgpServer {
+func newBGPserver(metrics *Metrics) *bgpServer {
 	s := &bgpServer{
-		rib: locRIB.New(),
+		rib:     locRIB.New(),
+		metrics: metrics,
 	}
-
-	go func() {
-		for {
-			time.Sleep(10 * time.Second)
-			fmt.Printf("Route count: %d\n", s.rib.RouteCount())
-		}
-	}()
 
 	return s
 }
@@ -141,9 +137,29 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bco
 }
 
 func (bs *bgpServer) addPath(pfx bnet.Prefix, p *route.Path) error {
-	return bs.rib.AddPath(pfx, p)
+	if bs.rib.ContainsPfxPath(pfx, p) {
+		return nil
+	}
+
+	err := bs.rib.AddPath(pfx, p)
+	if err == nil {
+		log.Infof("Added route: %s via %s\n", pfx, p.BGPPath.NextHop)
+		bs.metrics.routesAdded.Inc()
+	}
+
+	return err
 }
 
 func (bs *bgpServer) removePath(pfx bnet.Prefix, p *route.Path) bool {
-	return bs.rib.RemovePath(pfx, p)
+	if !bs.rib.ContainsPfxPath(pfx, p) {
+		return true
+	}
+
+	res := bs.rib.RemovePath(pfx, p)
+	if res {
+		log.Infof("Removed route: %s via %s\n", pfx, p.BGPPath.NextHop)
+		bs.metrics.routesWithdrawn.Inc()
+	}
+
+	return res
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"math"
 	"net"
 
 	"google.golang.org/grpc"
@@ -65,6 +66,12 @@ func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.
 		return s.errorResult(api.StatusCodeRequestError, err.Error()), nil
 	}
 
+	err = s.addCommunitiesToBGPPath(p.BGPPath, req)
+	if err != nil {
+		return s.errorResult(api.StatusCodeRequestError, err.Error()), nil
+	}
+	s.addLargeCommunitiesToBGPPath(p.BGPPath, req)
+
 	if err := s.bgp.addPath(pfx, p); err != nil {
 		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
@@ -112,7 +119,6 @@ func (s *apiServer) pathForRoute(r *pb.Route) (*route.Path, error) {
 			ASPath:    make(types.ASPath, 0),
 			LocalPref: 100,
 			NextHop:   nextHopIP,
-			Origin:    0,
 		},
 	}, nil
 }
@@ -124,6 +130,34 @@ func (s *apiServer) prefixForRequest(pfx *pb.Prefix) (bnet.Prefix, error) {
 	}
 
 	return bnet.NewPfx(ip, uint8(pfx.Length)), nil
+}
+
+func (s *apiServer) addCommunitiesToBGPPath(p *route.BGPPath, req *pb.AddRouteRequest) error {
+	p.Communities = make([]uint32, len(req.Communities))
+	for i, c := range req.Communities {
+		if c.Asn > math.MaxUint16 {
+			return fmt.Errorf("ASN part of community too large: (%d:%d)", c.Asn, c.Value)
+		}
+
+		if c.Value > math.MaxUint16 {
+			return fmt.Errorf("Value part of community too large: (%d:%d)", c.Asn, c.Value)
+		}
+
+		p.Communities[i] = c.Asn<<16 + c.Value
+	}
+
+	return nil
+}
+
+func (s *apiServer) addLargeCommunitiesToBGPPath(p *route.BGPPath, req *pb.AddRouteRequest) {
+	p.LargeCommunities = make([]types.LargeCommunity, len(req.Communities))
+	for i, c := range req.LargeCommunities {
+		p.LargeCommunities[i] = types.LargeCommunity{
+			GlobalAdministrator: c.GlobalAdministrator,
+			DataPart1:           c.LocalDataPart1,
+			DataPart2:           c.LocalDataPart2,
+		}
+	}
 }
 
 func (s *apiServer) errorResult(code uint32, msg string) *pb.Result {

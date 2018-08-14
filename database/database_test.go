@@ -48,8 +48,8 @@ func TestSave(t *testing.T) {
 
 	assert.Equal(t, route.Prefix, r.Prefix, "Prefix")
 	assert.Equal(t, route.NextHop, r.NextHop, "Next-Hop")
-	assert.Equal(t, 1, len(route.Communities), "Communities")
-	assert.Equal(t, 2, len(route.LargeCommunities), "Large-Communities")
+	assert.Equal(t, 1, len(r.Communities), "Communities")
+	assert.Equal(t, 2, len(r.LargeCommunities), "Large-Communities")
 }
 
 func TestDelete(t *testing.T) {

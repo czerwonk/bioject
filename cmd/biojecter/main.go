@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"regexp"
+	"strconv"
 
 	"google.golang.org/grpc"
 
@@ -17,11 +19,15 @@ import (
 
 const version = "0.1"
 
+var (
+	communityRegex = regexp.MustCompile("(\\d+)\\:(\\d+)(?:\\:(\\d+))?")
+)
+
 func main() {
-	apiAddress := flag.String("api", "[::1]:1337", "Address to the bioject GRPPC API")
+	apiAddress := flag.String("api", "[::1]:1337", "Address to the bioject GRPC API")
 	prefix := flag.String("prefix", "", "Prefix")
 	nextHop := flag.String("next-hop", "", "Next hop IP")
-	community := flag.String("community", "", "Community to tag the route with")
+	community := flag.String("community", "", "BGP Community to tag the route with (Format: a:b for RFC1997 or a:b:c for RFC8195)")
 	withdraw := flag.Bool("withdraw", false, "Withdraws route instead of adding it")
 	v := flag.Bool("v", false, "Show version info")
 
@@ -93,14 +99,7 @@ func ipBytes(ip net.IP) []byte {
 }
 
 func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, community string) error {
-	req := &pb.AddRouteRequest{
-		Route: &pb.Route{
-			Prefix:  pfx,
-			NextHop: nextHop,
-		},
-		Communities:      make([]*pb.Community, 0),
-		LargeCommunities: make([]*pb.LargeCommunity, 0),
-	}
+	req := createAddRouteRequest(pfx, nextHop, community)
 
 	res, err := client.AddRoute(context.Background(), req)
 	if err != nil {
@@ -112,6 +111,50 @@ func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, 
 	}
 
 	return nil
+}
+
+func createAddRouteRequest(pfx *pb.Prefix, nextHop net.IP, community string) *pb.AddRouteRequest {
+	req := &pb.AddRouteRequest{
+		Route: &pb.Route{
+			Prefix:  pfx,
+			NextHop: nextHop,
+		},
+		Communities:      make([]*pb.Community, 0),
+		LargeCommunities: make([]*pb.LargeCommunity, 0),
+	}
+
+	matches := communityRegex.FindAllStringSubmatch(community, -1)
+	for _, m := range matches {
+		if m[3] != "" {
+			req.LargeCommunities = append(req.LargeCommunities, largeCommunityForMatch(m))
+		} else {
+			req.Communities = append(req.Communities, communityForMatch(m))
+		}
+	}
+
+	return req
+}
+
+func largeCommunityForMatch(groups []string) *pb.LargeCommunity {
+	global, _ := strconv.Atoi(groups[1])
+	p1, _ := strconv.Atoi(groups[2])
+	p2, _ := strconv.Atoi(groups[3])
+
+	return &pb.LargeCommunity{
+		GlobalAdministrator: uint32(global),
+		LocalDataPart1:      uint32(p1),
+		LocalDataPart2:      uint32(p2),
+	}
+}
+
+func communityForMatch(groups []string) *pb.Community {
+	asn, _ := strconv.Atoi(groups[1])
+	value, _ := strconv.Atoi(groups[2])
+
+	return &pb.Community{
+		Asn:   uint32(asn),
+		Value: uint32(value),
+	}
 }
 
 func sendWithdraw(client pb.BioJectServiceClient, prefix *pb.Prefix, nextHop net.IP) error {

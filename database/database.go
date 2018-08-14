@@ -61,7 +61,7 @@ func (d *Database) Delete(route *Route) error {
 // Routes returns all routes stored in the database
 func (d *Database) Routes() ([]*Route, error) {
 	var routes []*Route
-	d.db.Find(&routes)
+	d.db.Preload("Communities").Preload("LargeCommunities").Find(&routes)
 	return routes, d.db.Error
 }
 

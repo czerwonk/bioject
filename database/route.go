@@ -1,11 +1,7 @@
 package database
 
-import (
-	"github.com/jinzhu/gorm"
-)
-
 type Route struct {
-	gorm.Model
+	ID               uint
 	Prefix           string
 	NextHop          string
 	Communities      []*Community
@@ -13,15 +9,18 @@ type Route struct {
 }
 
 type Community struct {
-	gorm.Model
-	ASN   uint16
-	Value uint16
+	ID      uint
+	ASN     uint16
+	Value   uint16
+	RouteID uint
 }
 
 type LargeCommunity struct {
-	Global uint32
-	Data1  uint32
-	Data2  uint32
+	ID      uint
+	Global  uint32
+	Data1   uint32
+	Data2   uint32
+	RouteID uint
 }
 
 func NewRoute(prefix, nextHop string) *Route {
@@ -33,17 +32,23 @@ func NewRoute(prefix, nextHop string) *Route {
 	}
 }
 
-func (r *Route) AddCommunity(asn uint16, value uint16) {
+func (r *Route) AddCommunity(asn uint16, value uint16) *Route {
 	r.Communities = append(r.Communities, &Community{
-		ASN:   asn,
-		Value: value,
+		ASN:     asn,
+		Value:   value,
+		RouteID: r.ID,
 	})
+
+	return r
 }
 
-func (r *Route) AddLargeCommunity(global uint32, local1 uint32, local2 uint32) {
+func (r *Route) AddLargeCommunity(global uint32, local1 uint32, local2 uint32) *Route {
 	r.LargeCommunities = append(r.LargeCommunities, &LargeCommunity{
-		Global: global,
-		Data1:  local1,
-		Data2:  local2,
+		Global:  global,
+		Data1:   local1,
+		Data2:   local2,
+		RouteID: r.ID,
 	})
+
+	return r
 }

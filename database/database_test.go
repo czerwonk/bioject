@@ -41,7 +41,7 @@ func TestSave(t *testing.T) {
 	d.Save(route)
 
 	var r Route
-	d.db.First(&r)
+	d.db.Preload("Communities").Preload("LargeCommunities").First(&r)
 	if d.db.Error != nil {
 		t.Fatal(d.db.Error)
 	}
@@ -49,7 +49,7 @@ func TestSave(t *testing.T) {
 	assert.Equal(t, route.Prefix, r.Prefix, "Prefix")
 	assert.Equal(t, route.NextHop, r.NextHop, "Next-Hop")
 	assert.Equal(t, 1, len(r.Communities), "Communities")
-	assert.Equal(t, 2, len(r.LargeCommunities), "Large-Communities")
+	assert.Equal(t, 2, len(r.LargeCommunities), "Large Communities")
 }
 
 func TestDelete(t *testing.T) {
@@ -82,11 +82,8 @@ func TestRoutes(t *testing.T) {
 	d := connectTestDB()
 	defer d.Close()
 
-	r1 := insert(d, NewRoute("185.138.52.1/32", "192.168.2.1"), t)
-	r1.AddLargeCommunity(202739, 123, 456)
-
-	r2 := insert(d, NewRoute("185.138.52.0/32", "192.168.2.1"), t)
-	r2.AddCommunity(48821, 123)
+	r1 := insert(d, NewRoute("185.138.52.1/32", "192.168.2.1").AddLargeCommunity(202739, 123, 456), t)
+	r2 := insert(d, NewRoute("185.138.52.0/32", "192.168.2.1").AddCommunity(48821, 123), t)
 
 	routes, err := d.Routes()
 	if err != nil {
@@ -94,13 +91,16 @@ func TestRoutes(t *testing.T) {
 	}
 
 	assert.Equal(t, 2, len(routes))
-	assert.Equal(t, r1.Prefix, routes[0].Prefix, "first prefix")
-	assert.Equal(t, r1.NextHop, routes[0].NextHop, "first nexthop")
-	assert.Equal(t, 1, len(r1.LargeCommunities), "len(LargeCommunities)")
 
-	assert.Equal(t, r2.Prefix, routes[1].Prefix, "second prefix")
-	assert.Equal(t, r2.NextHop, routes[1].NextHop, "second nexthop")
-	assert.Equal(t, 1, len(r2.Communities), "len(Communities)")
+	assert.Equal(t, r1.Prefix, routes[0].Prefix, "route 1 prefix")
+	assert.Equal(t, r1.NextHop, routes[0].NextHop, "route 1 next-hop")
+	assert.Equal(t, 0, len(routes[0].Communities), "route 1 communities")
+	assert.Equal(t, 1, len(routes[0].LargeCommunities), "route 1 large communities")
+
+	assert.Equal(t, r2.Prefix, routes[1].Prefix, "route 2 prefix")
+	assert.Equal(t, r2.NextHop, routes[1].NextHop, "route 2 next-hop")
+	assert.Equal(t, 1, len(routes[1].Communities), "route 2 communities")
+	assert.Equal(t, 0, len(routes[1].LargeCommunities), "route 2 large communities")
 }
 
 func insert(d *Database, r *Route, t *testing.T) *Route {
@@ -124,6 +124,8 @@ func connectTestDB() *Database {
 	if err != nil {
 		panic(err)
 	}
+
+	d.db.LogMode(true)
 
 	return d
 }

@@ -8,6 +8,7 @@ import (
 	bnet "github.com/bio-routing/bio-rd/net"
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/czerwonk/bioject/api"
+	"github.com/czerwonk/bioject/database"
 	pb "github.com/czerwonk/bioject/proto"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,13 +31,29 @@ func (m *bgpMock) removePath(pfx bnet.Prefix, p *route.Path) bool {
 	return m.removeResult
 }
 
+type dbMock struct {
+	saveCalled   bool
+	deleteCalled bool
+}
+
+func (m *dbMock) Save(route *database.Route) error {
+	m.saveCalled = true
+	return nil
+}
+
+func (m *dbMock) Delete(route *database.Route) error {
+	m.deleteCalled = true
+	return nil
+}
+
 func TestAddRoute(t *testing.T) {
 	tests := []struct {
 		name         string
 		req          *pb.AddRouteRequest
 		addResult    error
 		expectedCode uint32
-		wantCall     bool
+		wantBGPCall  bool
+		wantDBCall   bool
 		wantFail     bool
 	}{
 		{
@@ -50,7 +67,8 @@ func TestAddRoute(t *testing.T) {
 					NextHop: []byte{192, 168, 2, 1},
 				},
 			},
-			wantCall:     true,
+			wantBGPCall:  true,
+			wantDBCall:   true,
 			expectedCode: api.StatusCodeOK,
 		},
 		{
@@ -64,7 +82,8 @@ func TestAddRoute(t *testing.T) {
 					NextHop: []byte{0x20, 0x01, 0x06, 0x78, 0x01, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff},
 				},
 			},
-			wantCall:     true,
+			wantBGPCall:  true,
+			wantDBCall:   true,
 			expectedCode: api.StatusCodeOK,
 		},
 		{
@@ -107,7 +126,8 @@ func TestAddRoute(t *testing.T) {
 				},
 			},
 			wantFail:     true,
-			wantCall:     true,
+			wantBGPCall:  true,
+			wantDBCall:   false,
 			addResult:    fmt.Errorf("test"),
 			expectedCode: api.StatusCodeProcessingError,
 		},
@@ -115,11 +135,16 @@ func TestAddRoute(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			m := &bgpMock{
+			b := &bgpMock{
 				addResult: test.addResult,
 			}
 
-			api := &apiServer{bgp: m}
+			db := &dbMock{}
+
+			api := &apiServer{
+				bgp: b,
+				db:  db,
+			}
 
 			res, err := api.AddRoute(context.Background(), test.req)
 			if err != nil {
@@ -127,7 +152,8 @@ func TestAddRoute(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, test.wantCall, m.addCalled, "add called")
+			assert.Equal(t, test.wantBGPCall, b.addCalled, "add called on BGP")
+			assert.Equal(t, test.wantDBCall, db.saveCalled, "save called on DB")
 			assert.Equal(t, test.expectedCode, res.Code, "code")
 		})
 	}
@@ -139,7 +165,8 @@ func TestWithdrawRoute(t *testing.T) {
 		req          *pb.WithdrawRouteRequest
 		removeResult bool
 		expectedCode uint32
-		wantCall     bool
+		wantBGPCall  bool
+		wantDBCall   bool
 		wantFail     bool
 	}{
 		{
@@ -153,7 +180,8 @@ func TestWithdrawRoute(t *testing.T) {
 					NextHop: []byte{192, 168, 2, 1},
 				},
 			},
-			wantCall:     true,
+			wantBGPCall:  true,
+			wantDBCall:   true,
 			removeResult: true,
 			expectedCode: api.StatusCodeOK,
 		},
@@ -168,7 +196,8 @@ func TestWithdrawRoute(t *testing.T) {
 					NextHop: []byte{0x20, 0x01, 0x06, 0x78, 0x01, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff},
 				},
 			},
-			wantCall:     true,
+			wantBGPCall:  true,
+			wantDBCall:   true,
 			removeResult: true,
 			expectedCode: api.StatusCodeOK,
 		},
@@ -212,7 +241,8 @@ func TestWithdrawRoute(t *testing.T) {
 				},
 			},
 			wantFail:     true,
-			wantCall:     true,
+			wantBGPCall:  true,
+			wantDBCall:   false,
 			removeResult: false,
 			expectedCode: api.StatusCodeProcessingError,
 		},
@@ -220,11 +250,16 @@ func TestWithdrawRoute(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			m := &bgpMock{
+			b := &bgpMock{
 				removeResult: test.removeResult,
 			}
 
-			api := &apiServer{bgp: m}
+			db := &dbMock{}
+
+			api := &apiServer{
+				bgp: b,
+				db:  db,
+			}
 
 			res, err := api.WithdrawRoute(context.Background(), test.req)
 			if err != nil {
@@ -232,7 +267,8 @@ func TestWithdrawRoute(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, test.wantCall, m.removeCalled, "remove called")
+			assert.Equal(t, test.wantBGPCall, b.removeCalled, "remove called on BGP")
+			assert.Equal(t, test.wantDBCall, db.deleteCalled, "delete called on DB")
 			assert.Equal(t, test.expectedCode, res.Code, "code")
 		})
 	}

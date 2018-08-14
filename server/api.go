@@ -26,10 +26,10 @@ type bgpService interface {
 
 type apiServer struct {
 	bgp bgpService
-	db  *database.Database
+	db  database.RouteStore
 }
 
-func startAPIServer(listenAddress string, bgp bgpService, db *database.Database, metrics *Metrics) error {
+func startAPIServer(listenAddress string, bgp bgpService, db database.RouteStore, metrics *Metrics) error {
 	lis, err := net.Listen("tcp", listenAddress)
 	if err != nil {
 		return fmt.Errorf("failed to listen: %v", err)

@@ -28,9 +28,11 @@ func Connect(dialect string, args ...interface{}) (*Database, error) {
 }
 
 func (d *Database) autoMigrate() error {
-	d.db.AutoMigrate(&Route{})
-	if d.db.Error != nil {
-		return d.db.Error
+	for _, t := range []interface{}{&Route{}, &Community{}, &LargeCommunity{}} {
+		d.db.AutoMigrate(t)
+		if d.db.Error != nil {
+			return d.db.Error
+		}
 	}
 
 	return nil

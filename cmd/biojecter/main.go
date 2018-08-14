@@ -46,7 +46,7 @@ func main() {
 }
 
 func showVersion() {
-	fmt.Println("biojecter - Simle client for bioject route injector")
+	fmt.Println("biojecter - Simple client for bioject route injector")
 	fmt.Println("Version:", version)
 	fmt.Println("Author(s): Daniel Czerwonk")
 }

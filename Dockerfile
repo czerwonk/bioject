@@ -5,7 +5,7 @@ RUN go get github.com/czerwonk/bioject/cmd/bioject
 FROM alpine:latest
 
 RUN mkdir /app && \
-    mkdir /data && \
+    mkdir /data
 WORKDIR /app
 
 COPY --from=builder /go/bin/bioject .

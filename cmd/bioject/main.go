@@ -19,6 +19,8 @@ import (
 const version = "0.1"
 
 func main() {
+	log.SetLevel(log.DebugLevel)
+
 	configFile := flag.String("config-file", "config.yml", "Path to config file")
 	listenAddress := flag.String("listen-address", ":1337", "Listen address to listen for GRPC calls")
 	dbFile := flag.String("db-file", "routes.db", "Path to the database persisting routes")

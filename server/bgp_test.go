@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bio-routing/bio-rd/routingtable"
 	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 
 	bconfig "github.com/bio-routing/bio-rd/config"
@@ -124,6 +125,9 @@ func TestPeerForSession(t *testing.T) {
 					ImportFilter: filter.NewDrainFilter(),
 					ExportFilter: exportFilter,
 					RIB:          rib,
+					AddPathSend: routingtable.ClientOptions{
+						BestOnly: true,
+					},
 				},
 			},
 		},
@@ -147,6 +151,9 @@ func TestPeerForSession(t *testing.T) {
 					ImportFilter: filter.NewDrainFilter(),
 					ExportFilter: exportFilter,
 					RIB:          rib,
+					AddPathSend: routingtable.ClientOptions{
+						BestOnly: true,
+					},
 				},
 			},
 		},

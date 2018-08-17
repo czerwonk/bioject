@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bio-routing/bio-rd/routingtable"
+
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 	log "github.com/sirupsen/logrus"
@@ -126,6 +128,9 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, rout
 		RIB:          bs.rib,
 		ExportFilter: f,
 		ImportFilter: filter.NewDrainFilter(),
+		AddPathSend: routingtable.ClientOptions{
+			BestOnly: true,
+		},
 	}
 
 	if ip.IsIPv4() {

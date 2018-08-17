@@ -97,8 +97,8 @@ func TestPeerForSession(t *testing.T) {
 	exportFilter := filter.NewDrainFilter()
 	rib := locRIB.New()
 
-	routerID := bnet.IPv4FromOctets(127, 0, 0, 1)
-	
+	routerID := bnet.IPv4FromOctets(127, 0, 0, 1).ToUint32()
+
 	tests := []struct {
 		name     string
 		session  *config.Session
@@ -119,7 +119,7 @@ func TestPeerForSession(t *testing.T) {
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
 				Passive:           true,
-                                RouterID:          routerID,
+				RouterID:          routerID,
 				IPv4: &bconfig.AddressFamilyConfig{
 					ImportFilter: filter.NewDrainFilter(),
 					ExportFilter: exportFilter,
@@ -142,7 +142,7 @@ func TestPeerForSession(t *testing.T) {
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
 				Passive:           true,
-                                RouterID:          routerID,
+				RouterID:          routerID,
 				IPv6: &bconfig.AddressFamilyConfig{
 					ImportFilter: filter.NewDrainFilter(),
 					ExportFilter: exportFilter,

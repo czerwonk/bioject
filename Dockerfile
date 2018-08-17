@@ -5,7 +5,7 @@ FROM debian
 RUN mkdir /app && \
     mkdir /data
 WORKDIR /app
-COPY --from=builder /go/bin/bioject
+COPY --from=builder /go/bin/bioject .
 CMD ./bioject -config-file=/config/config.yml
 VOLUME /config
 EXPOSE 179

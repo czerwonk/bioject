@@ -10,3 +10,4 @@ CMD ./bioject -config-file=/config/config.yml
 VOLUME /config
 EXPOSE 179
 EXPOSE 1337
+EXPOSE 9500

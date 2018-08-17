@@ -1,5 +1,5 @@
 FROM golang as builder
-RUN go get -d -v github.com/czerwonk/bioject
+RUN go get -d -v github.com/czerwonk/bioject/cmd/bioject
 WORKDIR /go/src/github.com/czerwonk/bioject/cmd/bioject
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
 

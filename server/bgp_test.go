@@ -97,7 +97,7 @@ func TestPeerForSession(t *testing.T) {
 	exportFilter := filter.NewDrainFilter()
 	rib := locRIB.New()
 
-	routerID := bnet.IPv4FromOctets(127, 0, 0, 1).ToUint32()
+	routerID := bnet.IPv4FromOctets(127, 0, 0, 1)
 
 	tests := []struct {
 		name     string
@@ -113,13 +113,14 @@ func TestPeerForSession(t *testing.T) {
 			},
 			expected: bconfig.Peer{
 				AdminEnabled:      true,
+				LocalAS:           65000,
 				PeerAS:            65500,
 				PeerAddress:       bnet.IPv4FromOctets(192, 168, 1, 1),
 				ReconnectInterval: time.Second * 15,
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
 				Passive:           true,
-				RouterID:          routerID,
+				RouterID:          routerID.ToUint32(),
 				IPv4: &bconfig.AddressFamilyConfig{
 					ImportFilter: filter.NewDrainFilter(),
 					ExportFilter: exportFilter,
@@ -136,13 +137,14 @@ func TestPeerForSession(t *testing.T) {
 			},
 			expected: bconfig.Peer{
 				AdminEnabled:      true,
+				LocalAS:           65000,
 				PeerAS:            202739,
 				PeerAddress:       bnet.IPv6FromBlocks(0x2001, 0x678, 0x1e0, 0, 0, 0, 0, 1),
 				ReconnectInterval: time.Second * 15,
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
 				Passive:           true,
-				RouterID:          routerID,
+				RouterID:          routerID.ToUint32(),
 				IPv6: &bconfig.AddressFamilyConfig{
 					ImportFilter: filter.NewDrainFilter(),
 					ExportFilter: exportFilter,
@@ -155,10 +157,12 @@ func TestPeerForSession(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			bs := &bgpServer{
-				rib: rib,
+				rib:      rib,
+				routerID: routerID,
+				localAS:  65000,
 			}
 
-			p, err := bs.peerForSession(test.session, exportFilter, routerID)
+			p, err := bs.peerForSession(test.session, exportFilter)
 			if err != nil {
 				t.Fatal(err)
 			}

@@ -96,7 +96,7 @@ func (bs *bgpServer) exportFilter(c *config.Config) (*filter.Filter, error) {
 }
 
 func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPServer) error {
-	p, err := bs.peerForSession(sess, f, b.RouterID())
+	p, err := bs.peerForSession(sess, f, bnet.IPv4(b.RouterID()))
 	if err != nil {
 		return err
 	}

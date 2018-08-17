@@ -96,7 +96,7 @@ func (bs *bgpServer) exportFilter(c *config.Config) (*filter.Filter, error) {
 }
 
 func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPServer) error {
-	p, err := bs.peerForSession(sess, f)
+	p, err := bs.peerForSession(sess, f, b)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPSe
 	return nil
 }
 
-func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bconfig.Peer, error) {
+func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, b bgp.BGPServer) (bconfig.Peer, error) {
 	ip, err := bnet.IPFromString(sess.IP)
 	if err != nil {
 		return bconfig.Peer{}, fmt.Errorf("could not parse IP for session %s: %v", sess.Name, err)
@@ -119,6 +119,7 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bco
 		HoldTime:          time.Second * 90,
 		KeepAlive:         time.Second * 30,
 		Passive:           true,
+		RouterID:          b.RouterID(),
 	}
 
 	addressFamily := &bconfig.AddressFamilyConfig{

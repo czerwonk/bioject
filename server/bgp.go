@@ -18,10 +18,8 @@ import (
 )
 
 type bgpServer struct {
-	rib      *locRIB.LocRIB
-	metrics  *Metrics
-	localAS  uint32
-	routerID bnet.IP
+	rib     *locRIB.LocRIB
+	metrics *Metrics
 }
 
 func newBGPserver(metrics *Metrics) *bgpServer {
@@ -40,7 +38,6 @@ func (bs *bgpServer) start(c *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("could not parse router id: %v", err)
 	}
-	bs.routerID = routerID
 
 	err = b.Start(&bconfig.Global{
 		Listen:   true,
@@ -50,7 +47,6 @@ func (bs *bgpServer) start(c *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("unable to start BGP server: %v", err)
 	}
-	bs.localAS = c.LocalAS
 
 	f, err := bs.exportFilter(c)
 	if err != nil {
@@ -100,7 +96,7 @@ func (bs *bgpServer) exportFilter(c *config.Config) (*filter.Filter, error) {
 }
 
 func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPServer) error {
-	p, err := bs.peerForSession(sess, f)
+	p, err := bs.peerForSession(sess, f, b.RouterID())
 	if err != nil {
 		return err
 	}
@@ -109,7 +105,7 @@ func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPSe
 	return nil
 }
 
-func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bconfig.Peer, error) {
+func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, routerID uint32) (bconfig.Peer, error) {
 	ip, err := bnet.IPFromString(sess.IP)
 	if err != nil {
 		return bconfig.Peer{}, fmt.Errorf("could not parse IP for session %s: %v", sess.Name, err)
@@ -117,14 +113,13 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter) (bco
 
 	p := bconfig.Peer{
 		AdminEnabled:      true,
-		LocalAS:           bs.localAS,
 		PeerAS:            sess.RemoteAS,
 		PeerAddress:       ip,
 		ReconnectInterval: time.Second * 15,
 		HoldTime:          time.Second * 90,
 		KeepAlive:         time.Second * 30,
 		Passive:           true,
-		RouterID:          bs.routerID.ToUint32(),
+		RouterID:          routerID,
 	}
 
 	addressFamily := &bconfig.AddressFamilyConfig{

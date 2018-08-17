@@ -119,6 +119,7 @@ func (s *apiServer) pathForRoute(r *pb.Route) (*route.Path, error) {
 			ASPath:    make(types.ASPath, 0),
 			LocalPref: 100,
 			NextHop:   nextHopIP,
+			EBGP:      true,
 		},
 	}, nil
 }

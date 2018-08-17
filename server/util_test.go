@@ -32,6 +32,7 @@ func TestConvertToBioRoute(t *testing.T) {
 					DataPart2:           456,
 				},
 			},
+			EBGP: true,
 		},
 	}
 

@@ -23,7 +23,7 @@ func (m *metricAPIAdapter) AddRoute(ctx context.Context, req *pb.AddRouteRequest
 	m.metrics.requestsTotal.Inc()
 
 	res, err := m.api.AddRoute(ctx, req)
-	if err == nil || res.Code != api.StatusCodeOK {
+	if err != nil || res.Code != api.StatusCodeOK {
 		m.metrics.requestsFailed.Inc()
 	}
 
@@ -34,7 +34,7 @@ func (m *metricAPIAdapter) WithdrawRoute(ctx context.Context, req *pb.WithdrawRo
 	m.metrics.requestsTotal.Inc()
 
 	res, err := m.api.WithdrawRoute(ctx, req)
-	if err == nil || res.Code != api.StatusCodeOK {
+	if err != nil || res.Code != api.StatusCodeOK {
 		m.metrics.requestsFailed.Inc()
 	}
 

@@ -20,12 +20,11 @@ import (
 const version = "0.1"
 
 func main() {
-	log.SetLevel(log.DebugLevel)
-
 	configFile := flag.String("config-file", "config.yml", "Path to config file")
 	listenAddress := flag.String("api-listen-address", ":1337", "Listen address to listen for GRPC calls")
 	bgpListenAddress := flag.String("bgp-listen-address", "0.0.0.0", "Listen address to listen for BGP connections")
 	dbFile := flag.String("db-file", "routes.db", "Path to the database persisting routes")
+	debug := flag.Bool("debug", false, "Enable debug log output")
 	v := flag.Bool("v", false, "Show version info")
 
 	flag.Parse()
@@ -33,6 +32,10 @@ func main() {
 	if *v {
 		showVersion()
 		os.Exit(0)
+	}
+
+	if *debug {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	cfg, err := loadConfigFile(*configFile)

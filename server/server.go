@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/czerwonk/bioject/config"
 	"github.com/czerwonk/bioject/database"
@@ -13,8 +14,8 @@ type Server struct {
 }
 
 // Start starts the server listening for BGP and API calls
-func Start(c *config.Config, listenAddress string, db *database.Database, metrics *Metrics) error {
-	bgp := newBGPserver(metrics)
+func Start(c *config.Config, listenAddress string, bgpListenAddress net.IP, db *database.Database, metrics *Metrics) error {
+	bgp := newBGPserver(metrics, bgpListenAddress)
 	err := bgp.start(c)
 	if err != nil {
 		return fmt.Errorf("could not start BGP speaker: %v", err)

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -22,7 +23,8 @@ func main() {
 	log.SetLevel(log.DebugLevel)
 
 	configFile := flag.String("config-file", "config.yml", "Path to config file")
-	listenAddress := flag.String("listen-address", ":1337", "Listen address to listen for GRPC calls")
+	listenAddress := flag.String("api-listen-address", ":1337", "Listen address to listen for GRPC calls")
+	bgpListenAddress := flag.String("bgp-listen-address", "0.0.0.0", "Listen address to listen for BGP connections")
 	dbFile := flag.String("db-file", "routes.db", "Path to the database persisting routes")
 	v := flag.Bool("v", false, "Show version info")
 
@@ -47,7 +49,7 @@ func main() {
 	}
 	defer db.Close()
 
-	log.Fatal(server.Start(cfg, *listenAddress, db, metrics))
+	log.Fatal(server.Start(cfg, *listenAddress, net.ParseIP(*bgpListenAddress), db, metrics))
 }
 
 func showVersion() {

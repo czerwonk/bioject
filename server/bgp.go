@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net"
 	"time"
 
 	"github.com/bio-routing/bio-rd/routingtable"
@@ -20,14 +21,16 @@ import (
 )
 
 type bgpServer struct {
-	rib     *locRIB.LocRIB
-	metrics *Metrics
+	rib           *locRIB.LocRIB
+	metrics       *Metrics
+	listenAddress net.IP
 }
 
-func newBGPserver(metrics *Metrics) *bgpServer {
+func newBGPserver(metrics *Metrics, listenAddress net.IP) *bgpServer {
 	s := &bgpServer{
-		rib:     locRIB.New(),
-		metrics: metrics,
+		rib:           locRIB.New(),
+		metrics:       metrics,
+		listenAddress: listenAddress,
 	}
 
 	return s
@@ -42,9 +45,10 @@ func (bs *bgpServer) start(c *config.Config) error {
 	}
 
 	err = b.Start(&bconfig.Global{
-		Listen:   true,
-		LocalASN: c.LocalAS,
-		RouterID: routerID.ToUint32(),
+		Listen:           true,
+		LocalASN:         c.LocalAS,
+		RouterID:         routerID.ToUint32(),
+		LocalAddressList: []net.IP{bs.listenAddress},
 	})
 	if err != nil {
 		return fmt.Errorf("unable to start BGP server: %v", err)

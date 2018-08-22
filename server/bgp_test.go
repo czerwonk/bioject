@@ -119,7 +119,6 @@ func TestPeerForSession(t *testing.T) {
 				ReconnectInterval: time.Second * 15,
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
-				Passive:           true,
 				RouterID:          routerID,
 				IPv4: &bconfig.AddressFamilyConfig{
 					ImportFilter: filter.NewDrainFilter(),
@@ -145,7 +144,6 @@ func TestPeerForSession(t *testing.T) {
 				ReconnectInterval: time.Second * 15,
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
-				Passive:           true,
 				RouterID:          routerID,
 				IPv6: &bconfig.AddressFamilyConfig{
 					ImportFilter: filter.NewDrainFilter(),

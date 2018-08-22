@@ -33,6 +33,9 @@ type Session struct {
 
 	// IP of the peer
 	IP string `yaml:"ip"`
+
+	// Passive defines if bioject should initiate a connection or wait to be connected
+	Passive bool `yaml:"passive,omitempty"`
 }
 
 // RouteFilter defines all parameters needed to decide wether to accept or to drop a route for a prefix

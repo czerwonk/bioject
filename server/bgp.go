@@ -124,7 +124,7 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, rout
 		ReconnectInterval: time.Second * 15,
 		HoldTime:          time.Second * 90,
 		KeepAlive:         time.Second * 30,
-		Passive:           true,
+		Passive:           sess.Passive,
 		RouterID:          routerID,
 	}
 

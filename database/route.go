@@ -4,6 +4,8 @@ type Route struct {
 	ID               uint
 	Prefix           string
 	NextHop          string
+	LocalPref        uint
+	MED              uint
 	Communities      []*Community
 	LargeCommunities []*LargeCommunity
 }

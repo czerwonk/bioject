@@ -13,8 +13,10 @@ const testDB = "test.db"
 
 func TestSave(t *testing.T) {
 	route := &Route{
-		Prefix:  "185.138.52.0/32",
-		NextHop: "192.168.2.1",
+		Prefix:    "185.138.52.0/32",
+		NextHop:   "192.168.2.1",
+		LocalPref: 200,
+		MED:       1,
 		Communities: []*Community{
 			{
 				ASN:   48821,
@@ -48,6 +50,8 @@ func TestSave(t *testing.T) {
 
 	assert.Equal(t, route.Prefix, r.Prefix, "Prefix")
 	assert.Equal(t, route.NextHop, r.NextHop, "Next-Hop")
+	assert.Equal(t, route.LocalPref, r.LocalPref, "Local-Pref")
+	assert.Equal(t, route.MED, r.MED, "MED")
 	assert.Equal(t, 1, len(r.Communities), "Communities")
 	assert.Equal(t, 2, len(r.LargeCommunities), "Large Communities")
 }

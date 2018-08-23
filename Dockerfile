@@ -6,7 +6,7 @@ RUN mkdir /app && \
     mkdir /data
 WORKDIR /app
 COPY --from=builder /go/bin/bioject .
-CMD ./bioject -config-file=/config/config.yml
+CMD ./bioject -config-file=/config/config.yml -db-file=/config/routes.db
 VOLUME /config
 EXPOSE 179
 EXPOSE 1337

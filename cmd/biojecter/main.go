@@ -17,18 +17,30 @@ import (
 	pb "github.com/czerwonk/bioject/proto"
 )
 
-const version = "0.1"
+const version = "0.1.1"
 
 var (
 	communityRegex = regexp.MustCompile("(\\d+)\\:(\\d+)(?:\\:(\\d+))?")
 )
 
+type requestParameters struct {
+	prefix    string
+	nextHop   string
+	localPref int
+	med       int
+	community string
+	withdraw  bool
+}
+
 func main() {
+	p := &requestParameters{}
 	apiAddress := flag.String("api", "[::1]:1337", "Address to the bioject GRPC API")
-	prefix := flag.String("prefix", "", "Prefix")
-	nextHop := flag.String("next-hop", "", "Next hop IP")
-	community := flag.String("community", "", "BGP Community to tag the route with (Format: a:b for RFC1997 or a:b:c for RFC8195)")
-	withdraw := flag.Bool("withdraw", false, "Withdraws route instead of adding it")
+	flag.StringVar(&p.prefix, "prefix", "", "Prefix")
+	flag.StringVar(&p.nextHop, "next-hop", "", "Next hop IP")
+	flag.IntVar(&p.localPref, "local-pref", 100, "Local preference of the route")
+	flag.IntVar(&p.med, "med", 0, "Multiple Exit Discriminator of the route")
+	flag.StringVar(&p.community, "community", "", "BGP Community to tag the route with (Format: a:b for RFC1997 or a:b:c for RFC8195)")
+	flag.BoolVar(&p.withdraw, "withdraw", false, "Withdraws route instead of adding it")
 	v := flag.Bool("v", false, "Show version info")
 
 	flag.Parse()
@@ -45,7 +57,7 @@ func main() {
 	defer conn.Close()
 
 	client := pb.NewBioJectServiceClient(conn)
-	err = sendRequest(client, *prefix, *nextHop, *community, *withdraw)
+	err = sendRequest(client, p)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -57,22 +69,22 @@ func showVersion() {
 	fmt.Println("Author(s): Daniel Czerwonk")
 }
 
-func sendRequest(client pb.BioJectServiceClient, prefix, nextHop, community string, withdraw bool) error {
-	pfx, err := parsePrefix(prefix)
+func sendRequest(client pb.BioJectServiceClient, p *requestParameters) error {
+	pfx, err := parsePrefix(p.prefix)
 	if err != nil {
 		return err
 	}
 
-	nextHopIP := net.ParseIP(nextHop)
+	nextHopIP := net.ParseIP(p.nextHop)
 	if nextHopIP == nil {
-		return fmt.Errorf("could not parse next hop IP address: %s", nextHop)
+		return fmt.Errorf("could not parse next hop IP address: %s", p.nextHop)
 	}
 
-	if withdraw {
+	if p.withdraw {
 		return sendWithdraw(client, pfx, ipBytes(nextHopIP))
 	}
 
-	return sendUpdate(client, pfx, ipBytes(nextHopIP), community)
+	return sendUpdate(client, pfx, ipBytes(nextHopIP), p)
 }
 
 func parsePrefix(s string) (*pb.Prefix, error) {
@@ -98,8 +110,8 @@ func ipBytes(ip net.IP) []byte {
 	return b
 }
 
-func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, community string) error {
-	req := createAddRouteRequest(pfx, nextHop, community)
+func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, p *requestParameters) error {
+	req := createAddRouteRequest(pfx, nextHop, p)
 
 	res, err := client.AddRoute(context.Background(), req)
 	if err != nil {
@@ -113,17 +125,19 @@ func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, 
 	return nil
 }
 
-func createAddRouteRequest(pfx *pb.Prefix, nextHop net.IP, community string) *pb.AddRouteRequest {
+func createAddRouteRequest(pfx *pb.Prefix, nextHop net.IP, p *requestParameters) *pb.AddRouteRequest {
 	req := &pb.AddRouteRequest{
 		Route: &pb.Route{
-			Prefix:  pfx,
-			NextHop: nextHop,
+			Prefix:    pfx,
+			NextHop:   nextHop,
+			LocalPref: uint32(p.localPref),
+			Med:       uint32(p.med),
 		},
 		Communities:      make([]*pb.Community, 0),
 		LargeCommunities: make([]*pb.LargeCommunity, 0),
 	}
 
-	matches := communityRegex.FindAllStringSubmatch(community, -1)
+	matches := communityRegex.FindAllStringSubmatch(p.community, -1)
 	for _, m := range matches {
 		if m[3] != "" {
 			req.LargeCommunities = append(req.LargeCommunities, largeCommunityForMatch(m))

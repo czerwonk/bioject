@@ -18,6 +18,8 @@ message WithdrawRouteRequest {
 message Route {
     Prefix prefix = 1;
     bytes next_hop = 2;
+    uint32 local_pref = 3;
+    uint32 med = 4;
 }
 
 message Prefix {

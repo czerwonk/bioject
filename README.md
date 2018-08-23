@@ -37,7 +37,7 @@ router_id: 127.0.0.1
 route_filters:
   - net: "2001:678:1e0::"
     length: 48
-    min: 127
+    min: 56
     max: 128
 
 sessions:

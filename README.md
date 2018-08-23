@@ -8,6 +8,27 @@ Route injector based on BIO routing daemon (https://github.com/bio-routing/bio-r
 ## Use cases
 * automatically inject routes to mitigate DDos attacks (RTBH)
 
+## Installation
+
+### From Source
+
+#### CLI Client
+```bash
+go get github.com/czerwonk/bioject/cmd/biojecter
+```
+
+#### Server
+```bash
+go get github.com/czerwonk/bioject/cmd/bioject
+```
+
+### Docker
+
+#### Server
+```bash
+docker run -d --restart always --name bioject -p 179:179 -p 1337:1337 -p 6500:6500 -v /etc/bioject:/config czerwonk/bioject
+```
+
 ## Third Party Components
 This software uses components of the following projects
 * BIO routing daemon (https://github.com/bio-routing/bio-rt)

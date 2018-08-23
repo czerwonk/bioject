@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	bnet "github.com/bio-routing/bio-rd/net"
+	"github.com/bio-routing/bio-rd/protocols/bgp/types"
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/czerwonk/bioject/api"
 	"github.com/czerwonk/bioject/database"
@@ -64,7 +65,9 @@ func TestAddRoute(t *testing.T) {
 						Ip:     []byte{194, 48, 228, 0},
 						Length: 24,
 					},
-					NextHop: []byte{192, 168, 2, 1},
+					NextHop:   []byte{192, 168, 2, 1},
+					LocalPref: 200,
+					Med:       1,
 				},
 			},
 			wantBGPCall:  true,
@@ -94,7 +97,9 @@ func TestAddRoute(t *testing.T) {
 						Ip:     []byte{194, 48},
 						Length: 24,
 					},
-					NextHop: []byte{192, 168, 2, 1},
+					NextHop:   []byte{192, 168, 2, 1},
+					LocalPref: 200,
+					Med:       1,
 				},
 			},
 			wantFail:     true,
@@ -108,7 +113,9 @@ func TestAddRoute(t *testing.T) {
 						Ip:     []byte{194, 48, 228, 0},
 						Length: 24,
 					},
-					NextHop: []byte{192, 168},
+					NextHop:   []byte{192, 168},
+					LocalPref: 200,
+					Med:       1,
 				},
 			},
 			wantFail:     true,
@@ -122,7 +129,9 @@ func TestAddRoute(t *testing.T) {
 						Ip:     []byte{194, 48, 228, 0},
 						Length: 24,
 					},
-					NextHop: []byte{192, 168, 2, 1},
+					NextHop:   []byte{192, 168, 2, 1},
+					LocalPref: 200,
+					Med:       1,
 				},
 			},
 			wantFail:     true,
@@ -270,6 +279,68 @@ func TestWithdrawRoute(t *testing.T) {
 			assert.Equal(t, test.wantBGPCall, b.removeCalled, "remove called on BGP")
 			assert.Equal(t, test.wantDBCall, db.deleteCalled, "delete called on DB")
 			assert.Equal(t, test.expectedCode, res.Code, "code")
+		})
+	}
+}
+
+func TestPathForRoute(t *testing.T) {
+	tests := []struct {
+		name     string
+		route    *pb.Route
+		expected *route.BGPPath
+		wantFail bool
+	}{
+		{
+			name: "valid path with IPv4 nexthop",
+			route: &pb.Route{
+				NextHop:   []byte{192, 168, 2, 1},
+				LocalPref: 200,
+				Med:       1,
+			},
+			expected: &route.BGPPath{
+				ASPath:    make(types.ASPath, 0),
+				EBGP:      true,
+				LocalPref: 200,
+				MED:       1,
+				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
+			},
+		},
+		{
+			name: "valid path with IPv6 nexthop",
+			route: &pb.Route{
+				NextHop:   []byte{0x20, 0x01, 0x06, 0x78, 0x01, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+				LocalPref: 200,
+				Med:       1,
+			},
+			expected: &route.BGPPath{
+				ASPath:    make(types.ASPath, 0),
+				EBGP:      true,
+				LocalPref: 200,
+				MED:       1,
+				NextHop:   bnet.IPv6FromBlocks(0x2001, 0x0678, 0x01e0, 0, 0, 0, 0, 1),
+			},
+		},
+		{
+			name: "invalid nexthop",
+			route: &pb.Route{
+				NextHop:   []byte{65, 66, 67},
+				LocalPref: 200,
+				Med:       1,
+			},
+			wantFail: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			s := &apiServer{}
+			path, err := s.pathForRoute(test.route)
+			if err != nil {
+				assert.True(t, test.wantFail, "unexpected error:", err)
+				return
+			}
+
+			assert.Equal(t, test.expected, path.BGPPath)
 		})
 	}
 }

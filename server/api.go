@@ -117,7 +117,8 @@ func (s *apiServer) pathForRoute(r *pb.Route) (*route.Path, error) {
 		Type: route.BGPPathType,
 		BGPPath: &route.BGPPath{
 			ASPath:    make(types.ASPath, 0),
-			LocalPref: 100,
+			LocalPref: uint32(r.LocalPref),
+			MED:       uint32(r.Med),
 			NextHop:   nextHopIP,
 			EBGP:      true,
 		},

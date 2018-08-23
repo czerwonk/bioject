@@ -14,6 +14,8 @@ func convertToDatabaseRoute(prefix bnet.Prefix, path *route.Path) *database.Rout
 	r := &database.Route{
 		Prefix:           prefix.String(),
 		NextHop:          path.BGPPath.NextHop.String(),
+		LocalPref:        uint(path.BGPPath.LocalPref),
+		MED:              uint(path.BGPPath.MED),
 		Communities:      communitiesFromBioRoute(path.BGPPath.Communities),
 		LargeCommunities: largeCommunitiesFromBioRoute(path.BGPPath.LargeCommunities),
 	}
@@ -42,7 +44,8 @@ func convertToBioRoute(r *database.Route) (pfx bnet.Prefix, path *route.Path, er
 	return pfx, &route.Path{
 		Type: route.BGPPathType,
 		BGPPath: &route.BGPPath{
-			LocalPref:        100,
+			LocalPref:        uint32(r.LocalPref),
+			MED:              uint32(r.MED),
 			NextHop:          nextHop,
 			Communities:      communitiesFromDatabaseRoute(r.Communities),
 			LargeCommunities: largeCommunitiesFromDatabaseRoute(r.LargeCommunities),

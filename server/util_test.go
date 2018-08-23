@@ -13,6 +13,8 @@ import (
 
 func TestConvertToBioRoute(t *testing.T) {
 	r := database.NewRoute("185.138.52.0/32", "192.168.2.1")
+	r.LocalPref = 100
+	r.MED = 1
 	r.AddCommunity(48821, 123)
 	r.AddLargeCommunity(202739, 123, 456)
 
@@ -21,6 +23,7 @@ func TestConvertToBioRoute(t *testing.T) {
 		Type: route.BGPPathType,
 		BGPPath: &route.BGPPath{
 			LocalPref: 100,
+			MED:       1,
 			NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
 			Communities: []uint32{
 				3199533179,
@@ -53,7 +56,8 @@ func TestConvertToDatabaseRoute(t *testing.T) {
 			Communities: []uint32{
 				3199533179,
 			},
-			LocalPref: 100,
+			LocalPref: 200,
+			MED:       1,
 			LargeCommunities: []types.LargeCommunity{
 				{
 					GlobalAdministrator: 202739,
@@ -68,6 +72,8 @@ func TestConvertToDatabaseRoute(t *testing.T) {
 	expected := database.NewRoute("185.138.53.0/32", "192.168.2.1")
 	expected.AddCommunity(48821, 123)
 	expected.AddLargeCommunity(202739, 123, 456)
+	expected.LocalPref = 200
+	expected.MED = 1
 
 	r := convertToDatabaseRoute(pfx, path)
 

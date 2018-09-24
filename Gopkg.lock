@@ -11,7 +11,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:61e5b3aed69336fe57bd5536b0249735d71e345a57a54755ac4da3178909d3fe"
+  digest = "1:91db133c834b2f96e89ab49d34cc96bf65aafe57f71d5bf67fc8c89d5f895384"
   name = "github.com/bio-routing/bio-rd"
   packages = [
     "config",
@@ -28,7 +28,7 @@
     "routingtable/locRIB",
   ]
   pruneopts = "UT"
-  revision = "6169d537d1a58b1ce94a92e8544bde7a156d6edf"
+  revision = "e9e5c326984489af20f24d1948b8b2521266f0b4"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -129,7 +129,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8c49953a1414305f2ff5465147ee576dd705487c35b15918fcd4efdc0cb7a290"
+  digest = "1:ef1dd9945e58ee9b635273d28c0ef3fa3742a7dedc038ebe207fd63e6ce000ef"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -138,7 +138,7 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "05ee40e3a273f7245e8777337fc7b46e533a9a92"
+  revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
 
 [[projects]]
   digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
@@ -162,7 +162,7 @@
   name = "github.com/taktv6/tflow2"
   packages = ["convert"]
   pruneopts = "UT"
-  revision = "6cd304b0961728213cc4f6c477e971c3a4dde717"
+  revision = "c05b18bd57ea723faad165126ec38ae661bc1df6"
 
 [[projects]]
   branch = "master"
@@ -170,7 +170,7 @@
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "614d502a4dac94afa3a6ce146bd1736da82514c6"
+  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
 
 [[projects]]
   branch = "master"
@@ -186,18 +186,18 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "922f4815f713f213882e8ef45e0d315b164d705c"
+  revision = "2f5d2388922f370f4355f327fcf4cfe9f5583908"
 
 [[projects]]
   branch = "master"
-  digest = "1:48774faa158e9eaee1ba45aad66434bb0345927b43756a24d4fe4c44ad79e307"
+  digest = "1:75cb7164c3c9e028922e69b10842159549ab96ffc4800ea189c4a6865dc3bc08"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "3b58ed4ad3395d483fc92d5d14123ce2c3581fec"
+  revision = "90868a75fefd03942536221d7c0e2f84ec62a668"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -224,14 +224,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:077c1c599507b3b3e9156d17d36e1e61928ee9b53a5b420f10f28ebd4a0b275c"
+  digest = "1:56b0bca90b7e5d1facf5fbdacba23e4e0ce069d25381b8e2f70ef1e7ebfb9c1a"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "c66870c02cf823ceb633bcd05be3c7cda29976f4"
+  revision = "221a8d4f74948678f06caaa13c9d41d22e069ae8"
 
 [[projects]]
-  digest = "1:76332e947f184a2dc091db40f22c7089ada36bbc577793074639695af85a10fd"
+  digest = "1:dc0c170b110c22d9a4eccf08ab58490608053eac450bf456f3aaf9b30a668781"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -264,8 +264,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
-  version = "v1.14.0"
+  revision = "8dea3dc473e90c8179e519d91302d0597c0ca1d1"
+  version = "v1.15.0"
 
 [[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"

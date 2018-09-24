@@ -17,7 +17,7 @@ import (
 	pb "github.com/czerwonk/bioject/proto"
 )
 
-const version = "0.1.1"
+const version = "0.1.2"
 
 var (
 	communityRegex = regexp.MustCompile("(\\d+)\\:(\\d+)(?:\\:(\\d+))?")

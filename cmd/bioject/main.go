@@ -17,7 +17,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-const version = "0.1.1"
+const version = "0.1.2"
 
 func main() {
 	configFile := flag.String("config-file", "config.yml", "Path to config file")

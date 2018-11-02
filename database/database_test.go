@@ -1,12 +1,12 @@
 package database
 
 import (
+	"context"
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/stretchr/testify/assert"
 )
 
 const testDB = "test.db"
@@ -40,7 +40,7 @@ func TestSave(t *testing.T) {
 	d := connectTestDB()
 	defer d.Close()
 
-	d.Save(route)
+	d.Save(context.Background(), route)
 
 	var r Route
 	d.db.Preload("Communities").Preload("LargeCommunities").First(&r)
@@ -65,7 +65,7 @@ func TestDelete(t *testing.T) {
 	r2 := insert(d, NewRoute("185.138.52.0/32", "185.138.53.1"), t)
 
 	route := NewRoute("185.138.52.0/32", "192.168.2.1")
-	if err := d.Delete(route); err != nil {
+	if err := d.Delete(context.Background(), route); err != nil {
 		t.Fatal(err)
 	}
 

@@ -22,12 +22,12 @@ type bgpMock struct {
 	removeCalled bool
 }
 
-func (m *bgpMock) addPath(pfx bnet.Prefix, p *route.Path) error {
+func (m *bgpMock) addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path) error {
 	m.addCalled = true
 	return m.addResult
 }
 
-func (m *bgpMock) removePath(pfx bnet.Prefix, p *route.Path) bool {
+func (m *bgpMock) removePath(ctx context.Context, pfx bnet.Prefix, p *route.Path) bool {
 	m.removeCalled = true
 	return m.removeResult
 }
@@ -37,12 +37,12 @@ type dbMock struct {
 	deleteCalled bool
 }
 
-func (m *dbMock) Save(route *database.Route) error {
+func (m *dbMock) Save(ctx context.Context, route *database.Route) error {
 	m.saveCalled = true
 	return nil
 }
 
-func (m *dbMock) Delete(route *database.Route) error {
+func (m *dbMock) Delete(ctx context.Context, route *database.Route) error {
 	m.deleteCalled = true
 	return nil
 }

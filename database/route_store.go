@@ -1,6 +1,8 @@
 package database
 
+import "context"
+
 type RouteStore interface {
-	Save(route *Route) error
-	Delete(route *Route) error
+	Save(ctx context.Context, route *Route) error
+	Delete(ctx context.Context, route *Route) error
 }

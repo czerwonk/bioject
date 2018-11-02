@@ -17,6 +17,7 @@ import (
 	"github.com/czerwonk/bioject/config"
 	log "github.com/sirupsen/logrus"
 	"go.opencensus.io/stats"
+	"go.opencensus.io/trace"
 )
 
 type bgpServer struct {
@@ -146,6 +147,9 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, rout
 }
 
 func (bs *bgpServer) addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path) error {
+	ctx, span := trace.StartSpan(ctx, "BGP.AddPath")
+	defer span.End()
+
 	if bs.rib.ContainsPfxPath(pfx, p) {
 		return nil
 	}
@@ -160,6 +164,9 @@ func (bs *bgpServer) addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path
 }
 
 func (bs *bgpServer) removePath(ctx context.Context, pfx bnet.Prefix, p *route.Path) bool {
+	ctx, span := trace.StartSpan(ctx, "BGP.RemovePath")
+	defer span.End()
+
 	if !bs.rib.ContainsPfxPath(pfx, p) {
 		return true
 	}

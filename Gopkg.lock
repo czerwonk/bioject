@@ -101,6 +101,21 @@
   version = "v1.0.1"
 
 [[projects]]
+  digest = "1:4c0b468a26e04c13f8705cdab805754e13ec6063fcfec3ef360f58d46217e9c8"
+  name = "github.com/openzipkin/zipkin-go"
+  packages = [
+    ".",
+    "idgenerator",
+    "model",
+    "propagation",
+    "reporter",
+    "reporter/http",
+  ]
+  pruneopts = "UT"
+  revision = "70244c9703277c13566aac289c530a1143b14cf5"
+  version = "v0.1.2"
+
+[[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -197,18 +212,22 @@
   revision = "13995c7128ccc8e51e9a6bd2b551020a27180abd"
 
 [[projects]]
-  digest = "1:036099821592a40622e787d809038012b4d442335c6127cf09857c7a1225b720"
+  digest = "1:c2c68df840e1f69aae52ad73cefa0af267550e56de22bf6bda412ad8d0261888"
   name = "go.opencensus.io"
   packages = [
     ".",
     "exemplar",
     "exporter/prometheus",
+    "exporter/zipkin",
     "internal",
     "internal/tagencoding",
     "stats",
     "stats/internal",
     "stats/view",
     "tag",
+    "trace",
+    "trace/internal",
+    "trace/tracestate",
   ]
   pruneopts = "UT"
   revision = "b7bf3cdb64150a8c8c53b769fdeb2ba581bd4d4b"
@@ -341,11 +360,15 @@
     "github.com/golang/protobuf/proto",
     "github.com/jinzhu/gorm",
     "github.com/jinzhu/gorm/dialects/sqlite",
+    "github.com/openzipkin/zipkin-go",
+    "github.com/openzipkin/zipkin-go/reporter/http",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
     "go.opencensus.io/exporter/prometheus",
+    "go.opencensus.io/exporter/zipkin",
     "go.opencensus.io/stats",
     "go.opencensus.io/stats/view",
+    "go.opencensus.io/trace",
     "golang.org/x/net/context",
     "google.golang.org/grpc",
     "google.golang.org/grpc/reflection",

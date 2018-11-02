@@ -1,7 +1,10 @@
 package database
 
 import (
+	"context"
+
 	"github.com/jinzhu/gorm"
+	"go.opencensus.io/trace"
 )
 
 type Database struct {
@@ -39,7 +42,10 @@ func (d *Database) autoMigrate() error {
 }
 
 // Save saves a route to the database
-func (d *Database) Save(route *Route) error {
+func (d *Database) Save(ctx context.Context, route *Route) error {
+	ctx, span := trace.StartSpan(ctx, "Database.Save")
+	defer span.End()
+
 	d.db.Save(route)
 	if d.db.Error != nil {
 		return d.db.Error
@@ -49,7 +55,10 @@ func (d *Database) Save(route *Route) error {
 }
 
 // Delete removes a route from the database
-func (d *Database) Delete(route *Route) error {
+func (d *Database) Delete(ctx context.Context, route *Route) error {
+	ctx, span := trace.StartSpan(ctx, "Database.Delete")
+	defer span.End()
+
 	d.db.Delete(Route{}, "prefix = ? AND next_hop = ?", route.Prefix, route.NextHop)
 	if d.db.Error != nil {
 		return d.db.Error

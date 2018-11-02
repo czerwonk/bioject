@@ -13,6 +13,7 @@ import (
 	"github.com/czerwonk/bioject/database"
 	pb "github.com/czerwonk/bioject/proto"
 	log "github.com/sirupsen/logrus"
+	"go.opencensus.io/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -52,6 +53,8 @@ func startAPIServer(listenAddress string, bgp bgpService, db database.RouteStore
 
 func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.Result, error) {
 	log.Info("Received AddRoute request:", req)
+	ctx, span := trace.StartSpan(ctx, "API.AddRoute")
+	defer span.End()
 
 	pfx, err := s.prefixForRequest(req.Route.Prefix)
 	if err != nil {
@@ -73,7 +76,7 @@ func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.
 		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
 
-	if err := s.db.Save(convertToDatabaseRoute(pfx, p)); err != nil {
+	if err := s.db.Save(ctx, convertToDatabaseRoute(pfx, p)); err != nil {
 		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
 
@@ -82,6 +85,8 @@ func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.
 
 func (s *apiServer) WithdrawRoute(ctx context.Context, req *pb.WithdrawRouteRequest) (*pb.Result, error) {
 	log.Info("Received WithdrawRoute request:", req)
+	ctx, span := trace.StartSpan(ctx, "API.WithdrawRoute")
+	defer span.End()
 
 	pfx, err := s.prefixForRequest(req.Route.Prefix)
 	if err != nil {
@@ -97,7 +102,7 @@ func (s *apiServer) WithdrawRoute(ctx context.Context, req *pb.WithdrawRouteRequ
 		return s.errorResult(api.StatusCodeProcessingError, "did not remove path"), nil
 	}
 
-	if err := s.db.Delete(convertToDatabaseRoute(pfx, p)); err != nil {
+	if err := s.db.Delete(ctx, convertToDatabaseRoute(pfx, p)); err != nil {
 		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
 

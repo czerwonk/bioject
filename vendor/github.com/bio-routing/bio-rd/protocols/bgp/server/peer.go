@@ -20,10 +20,11 @@ type PeerInfo struct {
 }
 
 type peer struct {
-	server   *bgpServer
-	addr     bnet.IP
-	peerASN  uint32
-	localASN uint32
+	server    *bgpServer
+	addr      bnet.IP
+	localAddr bnet.IP
+	peerASN   uint32
+	localASN  uint32
 
 	// guarded by fsmsMu
 	fsms   []*FSM
@@ -51,6 +52,21 @@ type peerAddressFamily struct {
 
 	addPathSend    routingtable.ClientOptions
 	addPathReceive bool
+}
+
+func (p *peer) addressFamily(afi uint16, safi uint8) *peerAddressFamily {
+	if safi != packet.UnicastSAFI {
+		return nil
+	}
+
+	switch afi {
+	case packet.IPv4AFI:
+		return p.ipv4
+	case packet.IPv6AFI:
+		return p.ipv6
+	default:
+		return nil
+	}
 }
 
 func (p *peer) snapshot() PeerInfo {

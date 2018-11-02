@@ -11,14 +11,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:91db133c834b2f96e89ab49d34cc96bf65aafe57f71d5bf67fc8c89d5f895384"
+  digest = "1:1c4c08e9f14fe775cf586be7497c2f590d3df6367fcfddaaf88f165987d78556"
   name = "github.com/bio-routing/bio-rd"
   packages = [
     "config",
     "net",
+    "net/api",
     "protocols/bgp/packet",
     "protocols/bgp/server",
     "protocols/bgp/types",
+    "protocols/bmp/packet",
     "route",
     "routingtable",
     "routingtable/adjRIBIn",
@@ -26,9 +28,11 @@
     "routingtable/filter",
     "routingtable/filter/actions",
     "routingtable/locRIB",
+    "util/decode",
+    "util/decoder",
   ]
   pruneopts = "UT"
-  revision = "e9e5c326984489af20f24d1948b8b2521266f0b4"
+  revision = "88c1c813c6287be16ef2dc7208d054983bae8890"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -73,12 +77,20 @@
   revision = "04140366298a54a039076d798123ffa108fff46c"
 
 [[projects]]
-  digest = "1:3cafc6a5a1b8269605d9df4c6956d43d8011fc57f266ca6b9d04da6c09dee548"
+  digest = "1:0a69a1c0db3591fcefb47f115b224592c8dfa4368b7ba9fae509d5e16cdc95c8"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "5c8c8bd35d3832f5d134ae1e1e375b69a4d25242"
+  version = "v1.0.1"
+
+[[projects]]
+  digest = "1:4a49346ca45376a2bba679ca0e83bec949d780d4e927931317904bad482943ec"
   name = "github.com/mattn/go-sqlite3"
   packages = ["."]
   pruneopts = "UT"
-  revision = "25ecb14adfc7543176f7d85291ec7dba82c6f7e4"
-  version = "v1.9.0"
+  revision = "c7c4067b79cc51e6dfdcef5c702e74b1e0fa7c75"
+  version = "v1.10.0"
 
 [[projects]]
   digest = "1:ff5ebae34cfbf047d505ee150de27e60570e8c394b3b8fdbb720ff6ac71985fc"
@@ -97,15 +109,16 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:d14a5f4bfecf017cb780bdde1b6483e5deb87e12c332544d2c430eda58734bcb"
+  digest = "1:20a8a18488bdef471795af0413d9a3c9c35dc24ca93342329b884ba3c15cbaab"
   name = "github.com/prometheus/client_golang"
   packages = [
     "prometheus",
+    "prometheus/internal",
     "prometheus/promhttp",
   ]
   pruneopts = "UT"
-  revision = "c5b7fccd204277076155f10851dad72b76a49317"
-  version = "v0.8.0"
+  revision = "1cafe34db7fdec6022e17e00e1c1ea501022f3e4"
+  version = "v0.9.0"
 
 [[projects]]
   branch = "master"
@@ -117,7 +130,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:63b68062b8968092eb86bedc4e68894bd096ea6b24920faca8b9dcf451f54bb5"
+  digest = "1:db712fde5d12d6cdbdf14b777f0c230f4ff5ab0be8e35b239fc319953ed577a4"
   name = "github.com/prometheus/common"
   packages = [
     "expfmt",
@@ -125,11 +138,11 @@
     "model",
   ]
   pruneopts = "UT"
-  revision = "c7de2306084e37d54b8be01f3541a8464345e9a5"
+  revision = "7e9e6cabbd393fc208072eedef99188d0ce788b6"
 
 [[projects]]
   branch = "master"
-  digest = "1:ef1dd9945e58ee9b635273d28c0ef3fa3742a7dedc038ebe207fd63e6ce000ef"
+  digest = "1:ef74914912f99c79434d9c09658274678bc85080ebe3ab32bec3940ebce5e1fc"
   name = "github.com/prometheus/procfs"
   packages = [
     ".",
@@ -138,15 +151,15 @@
     "xfs",
   ]
   pruneopts = "UT"
-  revision = "418d78d0b9a7b7de3a6bbc8a23def624cc977bb2"
+  revision = "185b4288413d2a0dd0806f78c90dde719829e5ae"
 
 [[projects]]
-  digest = "1:d867dfa6751c8d7a435821ad3b736310c2ed68945d05b50fb9d23aee0540c8cc"
+  digest = "1:69b1cc331fca23d702bd72f860c6a647afd0aa9fcbc1d0659b1365e26546dd70"
   name = "github.com/sirupsen/logrus"
   packages = ["."]
   pruneopts = "UT"
-  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
-  version = "v1.0.6"
+  revision = "bcd833dfe83d3cebad139e4a29ed79cb2318bf95"
+  version = "v1.2.0"
 
 [[projects]]
   digest = "1:18752d0b95816a1b777505a97f71c7467a8445b8ffb55631a7bf779f6ba4fa83"
@@ -165,16 +178,35 @@
   revision = "c05b18bd57ea723faad165126ec38ae661bc1df6"
 
 [[projects]]
+  digest = "1:2d9d06cb9d46dacfdbb45f8575b39fc0126d083841a29d4fbf8d97708f43107e"
+  name = "github.com/vishvananda/netlink"
+  packages = [
+    ".",
+    "nl",
+  ]
+  pruneopts = "UT"
+  revision = "a2ad57a690f3caf3015351d2d6e1c0b95c349752"
+  version = "v1.0.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:e4e30678fb2560b5c62f6308c5023d6c294fc7713216fa379411cc74465e866f"
+  name = "github.com/vishvananda/netns"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "13995c7128ccc8e51e9a6bd2b551020a27180abd"
+
+[[projects]]
   branch = "master"
   digest = "1:3f3a05ae0b95893d90b9b3b5afdb79a9b3d96e4e36e099d841ae602e4aca0da8"
   name = "golang.org/x/crypto"
   packages = ["ssh/terminal"]
   pruneopts = "UT"
-  revision = "0e37d006457bf46f9e6692014ba72ef82c33022c"
+  revision = "4d3f4d9ffa16a13f451c3b2999e9c49e9750bf06"
 
 [[projects]]
   branch = "master"
-  digest = "1:deafe4ab271911fec7de5b693d7faae3f38796d9eb8622e2b9e7df42bb3dfea9"
+  digest = "1:edb6e15d08296b91f0cd5b8b24d3778e122258e38493cb576094aa4764f3c826"
   name = "golang.org/x/net"
   packages = [
     "context",
@@ -186,18 +218,18 @@
     "trace",
   ]
   pruneopts = "UT"
-  revision = "2f5d2388922f370f4355f327fcf4cfe9f5583908"
+  revision = "c10e9556a7bc0e7c942242b606f0acf024ad5d6a"
 
 [[projects]]
   branch = "master"
-  digest = "1:75cb7164c3c9e028922e69b10842159549ab96ffc4800ea189c4a6865dc3bc08"
+  digest = "1:417d27a82efb8473554234a282be33d23b0d6adc121e636b55950f913ac071d6"
   name = "golang.org/x/sys"
   packages = [
     "unix",
     "windows",
   ]
   pruneopts = "UT"
-  revision = "90868a75fefd03942536221d7c0e2f84ec62a668"
+  revision = "9b800f95dbbc54abff0acf7ee32d88ba4e328c89"
 
 [[projects]]
   digest = "1:a2ab62866c75542dd18d2b069fec854577a20211d7c0ea6ae746072a1dccdd18"
@@ -228,10 +260,10 @@
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
   pruneopts = "UT"
-  revision = "221a8d4f74948678f06caaa13c9d41d22e069ae8"
+  revision = "c830210a61dfaa790e1920f8d0470fc27bc2efbe"
 
 [[projects]]
-  digest = "1:dc0c170b110c22d9a4eccf08ab58490608053eac450bf456f3aaf9b30a668781"
+  digest = "1:e72ebff67b73d31785959af0660215213c58ab50d7b7d61aac0f1a6834c07e8c"
   name = "google.golang.org/grpc"
   packages = [
     ".",
@@ -264,8 +296,8 @@
     "tap",
   ]
   pruneopts = "UT"
-  revision = "8dea3dc473e90c8179e519d91302d0597c0ca1d1"
-  version = "v1.15.0"
+  revision = "2e463a05d100327ca47ac218281906921038fd95"
+  version = "v1.16.0"
 
 [[projects]]
   digest = "1:342378ac4dcb378a5448dd723f0784ae519383532f5e70ade24132c4c8693202"

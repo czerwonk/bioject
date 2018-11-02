@@ -29,9 +29,8 @@ type fsmAddressFamily struct {
 
 	updateSender *UpdateSender
 
-	addPathSend         routingtable.ClientOptions
-	addPathTXConfigured bool
-	addPathTX           bool
+	addPathTX routingtable.ClientOptions
+	addPathRX bool
 
 	multiProtocol bool
 
@@ -40,38 +39,49 @@ type fsmAddressFamily struct {
 
 func newFSMAddressFamily(afi uint16, safi uint8, family *peerAddressFamily, fsm *FSM) *fsmAddressFamily {
 	return &fsmAddressFamily{
-		afi:                 afi,
-		safi:                safi,
-		fsm:                 fsm,
-		rib:                 family.rib,
-		importFilter:        family.importFilter,
-		exportFilter:        family.exportFilter,
-		addPathTXConfigured: family.addPathReceive, // at this point we switch from peers view to our view
-		addPathSend:         family.addPathSend,
+		afi:          afi,
+		safi:         safi,
+		fsm:          fsm,
+		rib:          family.rib,
+		importFilter: family.importFilter,
+		exportFilter: family.exportFilter,
 	}
 }
 
 func (f *fsmAddressFamily) init(n *routingtable.Neighbor) {
 	contributingASNs := f.rib.GetContributingASNs()
 
-	f.adjRIBIn = adjRIBIn.New(f.importFilter, contributingASNs, f.fsm.peer.routerID, f.fsm.peer.clusterID)
+	f.adjRIBIn = adjRIBIn.New(f.importFilter, contributingASNs, f.fsm.peer.routerID, f.fsm.peer.clusterID, f.addPathRX)
 	contributingASNs.Add(f.fsm.peer.localASN)
+
 	f.adjRIBIn.Register(f.rib)
 
-	f.adjRIBOut = adjRIBOut.New(n, f.exportFilter, f.addPathTX)
+	f.adjRIBOut = adjRIBOut.New(n, f.exportFilter, !f.addPathTX.BestOnly)
 
 	f.updateSender = newUpdateSender(f.fsm, f.afi, f.safi)
 	f.updateSender.Start(time.Millisecond * 5)
 
 	f.adjRIBOut.Register(f.updateSender)
 
-	clientOptions := routingtable.ClientOptions{
-		BestOnly: true,
+	f.rib.RegisterWithOptions(f.adjRIBOut, f.addPathTX)
+}
+
+func (f *fsmAddressFamily) bmpInit() {
+	f.adjRIBIn = adjRIBIn.New(filter.NewAcceptAllFilter(), &routingtable.ContributingASNs{}, f.fsm.peer.routerID, f.fsm.peer.clusterID, f.addPathRX)
+
+	if f.rib != nil {
+		f.adjRIBIn.Register(f.rib)
 	}
-	if f.addPathTX {
-		clientOptions = f.addPathSend
-	}
-	f.rib.RegisterWithOptions(f.adjRIBOut, clientOptions)
+}
+
+func (f *fsmAddressFamily) bmpDispose() {
+	f.rib.GetContributingASNs().Remove(f.fsm.peer.localASN)
+
+	f.adjRIBIn.(*adjRIBIn.AdjRIBIn).Flush()
+
+	f.adjRIBIn.Unregister(f.rib)
+
+	f.adjRIBIn = nil
 }
 
 func (f *fsmAddressFamily) dispose() {
@@ -96,30 +106,25 @@ func (f *fsmAddressFamily) processUpdate(u *packet.BGPUpdate) {
 		return
 	}
 
-	if f.multiProtocol {
-		f.multiProtocolUpdates(u)
-		return
+	f.multiProtocolUpdates(u)
+	if f.afi == packet.IPv4AFI {
+		f.withdraws(u)
+		f.updates(u)
 	}
-
-	f.withdraws(u)
-	f.updates(u)
 }
 
 func (f *fsmAddressFamily) withdraws(u *packet.BGPUpdate) {
 	for r := u.WithdrawnRoutes; r != nil; r = r.Next {
-		pfx := bnet.NewPfx(bnet.IPv4(r.IP), r.Pfxlen)
-		f.adjRIBIn.RemovePath(pfx, nil)
+		f.adjRIBIn.RemovePath(r.Prefix, nil)
 	}
 }
 
 func (f *fsmAddressFamily) updates(u *packet.BGPUpdate) {
 	for r := u.NLRI; r != nil; r = r.Next {
-		pfx := bnet.NewPfx(bnet.IPv4(r.IP), r.Pfxlen)
-
 		path := f.newRoutePath()
 		f.processAttributes(u.PathAttributes, path)
 
-		f.adjRIBIn.AddPath(pfx, path)
+		f.adjRIBIn.AddPath(r.Prefix, path)
 	}
 }
 
@@ -154,8 +159,8 @@ func (f *fsmAddressFamily) multiProtocolUpdate(path *route.Path, nlri packet.Mul
 
 	path.BGPPath.NextHop = nlri.NextHop
 
-	for _, pfx := range nlri.Prefixes {
-		f.adjRIBIn.AddPath(pfx, path)
+	for n := nlri.NLRI; n != nil; n = n.Next {
+		f.adjRIBIn.AddPath(n.Prefix, path)
 	}
 }
 
@@ -164,8 +169,8 @@ func (f *fsmAddressFamily) multiProtocolWithdraw(path *route.Path, nlri packet.M
 		return
 	}
 
-	for _, pfx := range nlri.Prefixes {
-		f.adjRIBIn.RemovePath(pfx, path)
+	for cur := nlri.NLRI; cur != nil; cur = cur.Next {
+		f.adjRIBIn.RemovePath(cur.Prefix, path)
 	}
 }
 
@@ -196,6 +201,8 @@ func (f *fsmAddressFamily) processAttributes(attrs *packet.PathAttribute, path *
 			path.BGPPath.OriginatorID = pa.Value.(uint32)
 		case packet.ClusterListAttr:
 			path.BGPPath.ClusterList = pa.Value.([]uint32)
+		case packet.MultiProtocolReachNLRICode:
+		case packet.MultiProtocolUnreachNLRICode:
 		default:
 			unknownAttr := f.processUnknownAttribute(pa)
 			if unknownAttr != nil {

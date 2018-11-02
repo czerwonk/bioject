@@ -73,8 +73,17 @@ func (b *BGPPath) ECMP(c *BGPPath) bool {
 	return b.LocalPref == c.LocalPref && b.ASPathLen == c.ASPathLen && b.MED == c.MED && b.Origin == c.Origin
 }
 
-// Compare returns negative if b < c, 0 if paths are equal, positive if b > c
-func (b *BGPPath) Compare(c *BGPPath) int8 {
+// Equal checks if paths are equal
+func (b *BGPPath) Equal(c *BGPPath) bool {
+	if b.PathIdentifier != c.PathIdentifier {
+		return false
+	}
+
+	return b.Select(c) == 0
+}
+
+// Select returns negative if b < c, 0 if paths are equal, positive if b > c
+func (b *BGPPath) Select(c *BGPPath) int8 {
 	if c.LocalPref < b.LocalPref {
 		return 1
 	}
@@ -121,7 +130,7 @@ func (b *BGPPath) Compare(c *BGPPath) int8 {
 		return 1
 	}
 
-	// e) TODO: interiour cost (hello IS-IS and OSPF)
+	// e) TODO: interior cost (hello IS-IS and OSPF)
 
 	// f) + RFC4456 9. (Route Reflection)
 	bgpIdentifierC := c.BGPIdentifier
@@ -223,6 +232,45 @@ func (b *BGPPath) better(c *BGPPath) bool {
 	}
 
 	return false
+}
+
+// Print all known information about a route in logfile friendly format
+func (b *BGPPath) String() string {
+	origin := ""
+	switch b.Origin {
+	case 0:
+		origin = "Incomplete"
+	case 1:
+		origin = "EGP"
+	case 2:
+		origin = "IGP"
+	}
+
+	bgpType := "internal"
+	if b.EBGP {
+		bgpType = "external"
+	}
+
+	ret := fmt.Sprintf("Local Pref: %d, ", b.LocalPref)
+	ret += fmt.Sprintf("Origin: %s, ", origin)
+	ret += fmt.Sprintf("AS Path: %v, ", b.ASPath)
+	ret += fmt.Sprintf("BGP type: %s, ", bgpType)
+	ret += fmt.Sprintf("NEXT HOP: %s, ", b.NextHop)
+	ret += fmt.Sprintf("MED: %d, ", b.MED)
+	ret += fmt.Sprintf("Path ID: %d, ", b.PathIdentifier)
+	ret += fmt.Sprintf("Source: %s, ", b.Source)
+	ret += fmt.Sprintf("Communities: %v, ", b.Communities)
+	ret += fmt.Sprintf("LargeCommunities: %v, ", b.LargeCommunities)
+
+	if b.OriginatorID != 0 {
+		oid := convert.Uint32Byte(b.OriginatorID)
+		ret += fmt.Sprintf("OriginatorID: %d.%d.%d.%d, ", oid[0], oid[1], oid[2], oid[3])
+	}
+	if b.ClusterList != nil {
+		ret += fmt.Sprintf("ClusterList %s", b.ClusterListString())
+	}
+
+	return ret
 }
 
 // Print all known information about a route in human readable form

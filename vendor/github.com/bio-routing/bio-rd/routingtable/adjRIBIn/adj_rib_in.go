@@ -20,19 +20,34 @@ type AdjRIBIn struct {
 	contributingASNs *routingtable.ContributingASNs
 	routerID         uint32
 	clusterID        uint32
+	addPathRX        bool
 }
 
 // New creates a new Adjacency RIB In
-func New(exportFilter *filter.Filter, contributingASNs *routingtable.ContributingASNs, routerID uint32, clusterID uint32) *AdjRIBIn {
+func New(exportFilter *filter.Filter, contributingASNs *routingtable.ContributingASNs, routerID uint32, clusterID uint32, addPathRX bool) *AdjRIBIn {
 	a := &AdjRIBIn{
 		rt:               routingtable.NewRoutingTable(),
 		exportFilter:     exportFilter,
 		contributingASNs: contributingASNs,
 		routerID:         routerID,
 		clusterID:        clusterID,
+		addPathRX:        addPathRX,
 	}
 	a.ClientManager = routingtable.NewClientManager(a)
 	return a
+}
+
+// Flush drops all routes from the AdjRIBIn
+func (a *AdjRIBIn) Flush() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	routes := a.rt.Dump()
+	for _, route := range routes {
+		for _, path := range route.Paths() {
+			a.removePath(route.Prefix(), path)
+		}
+	}
 }
 
 // UpdateNewClient sends current state to a new client
@@ -82,8 +97,12 @@ func (a *AdjRIBIn) AddPath(pfx net.Prefix, p *route.Path) error {
 		}
 	}
 
-	oldPaths := a.rt.ReplacePath(pfx, p)
-	a.removePathsFromClients(pfx, oldPaths)
+	if a.addPathRX {
+		a.rt.AddPath(pfx, p)
+	} else {
+		oldPaths := a.rt.ReplacePath(pfx, p)
+		a.removePathsFromClients(pfx, oldPaths)
+	}
 
 	p, reject := a.exportFilter.ProcessTerms(pfx, p)
 	if reject {
@@ -118,17 +137,30 @@ func (a *AdjRIBIn) RemovePath(pfx net.Prefix, p *route.Path) bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
+	return a.removePath(pfx, p)
+}
+
+// removePath removes the path for prefix `pfx`
+func (a *AdjRIBIn) removePath(pfx net.Prefix, p *route.Path) bool {
 	r := a.rt.Get(pfx)
 	if r == nil {
 		return false
 	}
 
+	removed := make([]*route.Path, 0)
 	oldPaths := r.Paths()
 	for _, path := range oldPaths {
+		if a.addPathRX {
+			if path.BGPPath.PathIdentifier != p.BGPPath.PathIdentifier {
+				continue
+			}
+		}
+
 		a.rt.RemovePath(pfx, path)
+		removed = append(removed, path)
 	}
 
-	a.removePathsFromClients(pfx, oldPaths)
+	a.removePathsFromClients(pfx, removed)
 	return true
 }
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/czerwonk/bioject/api"
 	pb "github.com/czerwonk/bioject/proto"
+	"go.opencensus.io/stats"
 )
 
 type metricAPIAdapter struct {
@@ -20,22 +21,22 @@ func newMetricAPIAdapter(api *apiServer, metrics *Metrics) *metricAPIAdapter {
 }
 
 func (m *metricAPIAdapter) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.Result, error) {
-	m.metrics.requestsTotal.Inc()
+	stats.Record(ctx, m.metrics.requestsTotal.M(1))
 
 	res, err := m.api.AddRoute(ctx, req)
 	if err != nil || res.Code != api.StatusCodeOK {
-		m.metrics.requestsFailed.Inc()
+		stats.Record(ctx, m.metrics.requestsFailed.M(1))
 	}
 
 	return res, err
 }
 
 func (m *metricAPIAdapter) WithdrawRoute(ctx context.Context, req *pb.WithdrawRouteRequest) (*pb.Result, error) {
-	m.metrics.requestsTotal.Inc()
+	stats.Record(ctx, m.metrics.requestsTotal.M(1))
 
 	res, err := m.api.WithdrawRoute(ctx, req)
 	if err != nil || res.Code != api.StatusCodeOK {
-		m.metrics.requestsFailed.Inc()
+		stats.Record(ctx, m.metrics.requestsFailed.M(1))
 	}
 
 	return res, err

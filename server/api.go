@@ -6,23 +6,20 @@ import (
 	"math"
 	"net"
 
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
-
 	bnet "github.com/bio-routing/bio-rd/net"
 	"github.com/bio-routing/bio-rd/protocols/bgp/types"
 	"github.com/bio-routing/bio-rd/route"
-
 	"github.com/czerwonk/bioject/api"
 	"github.com/czerwonk/bioject/database"
 	pb "github.com/czerwonk/bioject/proto"
-
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type bgpService interface {
-	addPath(pfx bnet.Prefix, p *route.Path) error
-	removePath(pfx bnet.Prefix, p *route.Path) bool
+	addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path) error
+	removePath(ctx context.Context, pfx bnet.Prefix, p *route.Path) bool
 }
 
 type apiServer struct {
@@ -72,7 +69,7 @@ func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.
 	}
 	s.addLargeCommunitiesToBGPPath(p.BGPPath, req)
 
-	if err := s.bgp.addPath(pfx, p); err != nil {
+	if err := s.bgp.addPath(ctx, pfx, p); err != nil {
 		return s.errorResult(api.StatusCodeProcessingError, err.Error()), nil
 	}
 
@@ -96,7 +93,7 @@ func (s *apiServer) WithdrawRoute(ctx context.Context, req *pb.WithdrawRouteRequ
 		return s.errorResult(api.StatusCodeRequestError, err.Error()), nil
 	}
 
-	if !s.bgp.removePath(pfx, p) {
+	if !s.bgp.removePath(ctx, pfx, p) {
 		return s.errorResult(api.StatusCodeProcessingError, "did not remove path"), nil
 	}
 

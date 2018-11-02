@@ -1,23 +1,22 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"time"
 
-	"github.com/bio-routing/bio-rd/routingtable"
-
-	"github.com/bio-routing/bio-rd/route"
-	"github.com/bio-routing/bio-rd/routingtable/locRIB"
-	log "github.com/sirupsen/logrus"
-
 	bconfig "github.com/bio-routing/bio-rd/config"
 	bnet "github.com/bio-routing/bio-rd/net"
 	bgp "github.com/bio-routing/bio-rd/protocols/bgp/server"
+	"github.com/bio-routing/bio-rd/route"
+	"github.com/bio-routing/bio-rd/routingtable"
 	"github.com/bio-routing/bio-rd/routingtable/filter"
 	"github.com/bio-routing/bio-rd/routingtable/filter/actions"
-
+	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 	"github.com/czerwonk/bioject/config"
+	log "github.com/sirupsen/logrus"
+	"go.opencensus.io/stats"
 )
 
 type bgpServer struct {
@@ -146,7 +145,7 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, rout
 	return p, nil
 }
 
-func (bs *bgpServer) addPath(pfx bnet.Prefix, p *route.Path) error {
+func (bs *bgpServer) addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path) error {
 	if bs.rib.ContainsPfxPath(pfx, p) {
 		return nil
 	}
@@ -154,13 +153,13 @@ func (bs *bgpServer) addPath(pfx bnet.Prefix, p *route.Path) error {
 	err := bs.rib.AddPath(pfx, p)
 	if err == nil {
 		log.Infof("Added route: %s via %s\n", pfx, p.BGPPath.NextHop)
-		bs.metrics.routesAdded.Inc()
+		stats.Record(ctx, bs.metrics.routesAdded.M(1))
 	}
 
 	return err
 }
 
-func (bs *bgpServer) removePath(pfx bnet.Prefix, p *route.Path) bool {
+func (bs *bgpServer) removePath(ctx context.Context, pfx bnet.Prefix, p *route.Path) bool {
 	if !bs.rib.ContainsPfxPath(pfx, p) {
 		return true
 	}
@@ -168,7 +167,7 @@ func (bs *bgpServer) removePath(pfx bnet.Prefix, p *route.Path) bool {
 	res := bs.rib.RemovePath(pfx, p)
 	if res {
 		log.Infof("Removed route: %s via %s\n", pfx, p.BGPPath.NextHop)
-		bs.metrics.routesWithdrawn.Inc()
+		stats.Record(ctx, bs.metrics.routesWithdrawn.M(1))
 	}
 
 	return res

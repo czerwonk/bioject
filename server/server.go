@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net"
 
@@ -44,7 +45,7 @@ func restoreRoutes(bgp *bgpServer, db *database.Database) error {
 			return fmt.Errorf("could not convert %s via %s: %v", r.Prefix, r.NextHop, err)
 		}
 
-		err = bgp.addPath(pfx, path)
+		err = bgp.addPath(context.Background(), pfx, path)
 		if err != nil {
 			return fmt.Errorf("could not restore route %s via %s: %v", r.Prefix, r.NextHop, err)
 		}

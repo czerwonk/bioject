@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"fmt"
 	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 	"github.com/bio-routing/bio-rd/routingtable/vrf"
 	"github.com/pkg/errors"
@@ -118,7 +117,7 @@ func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPSe
 func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, routerID uint32) (bconfig.Peer, error) {
 	ip, err := bnet.IPFromString(sess.IP)
 	if err != nil {
-		return bconfig.Peer{}, fmt.Errorf("could not parse IP for session %s: %v", sess.Name, err)
+		return bconfig.Peer{}, errors.Wrapf(err, "could not parse IP for session %s", sess.Name)
 	}
 
 	p := bconfig.Peer{
@@ -139,6 +138,7 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, rout
 		AddPathSend: routingtable.ClientOptions{
 			BestOnly: true,
 		},
+		AddPathRecv: false,
 	}
 
 	if ip.IsIPv4() {

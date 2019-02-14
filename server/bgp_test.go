@@ -1,11 +1,11 @@
 package server
 
 import (
+	"github.com/bio-routing/bio-rd/routingtable/vrf"
 	"testing"
 	"time"
 
 	"github.com/bio-routing/bio-rd/routingtable"
-	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 
 	bconfig "github.com/bio-routing/bio-rd/config"
 	bnet "github.com/bio-routing/bio-rd/net"
@@ -96,7 +96,7 @@ func TestExportFilter(t *testing.T) {
 
 func TestPeerForSession(t *testing.T) {
 	exportFilter := filter.NewDrainFilter()
-	rib := locRIB.New()
+	vrf, _ := vrf.New("master")
 
 	routerID := bnet.IPv4FromOctets(127, 0, 0, 1).ToUint32()
 
@@ -123,11 +123,11 @@ func TestPeerForSession(t *testing.T) {
 				IPv4: &bconfig.AddressFamilyConfig{
 					ImportFilter: filter.NewDrainFilter(),
 					ExportFilter: exportFilter,
-					RIB:          rib,
 					AddPathSend: routingtable.ClientOptions{
 						BestOnly: true,
 					},
 				},
+				VRF: vrf,
 			},
 		},
 		{
@@ -148,11 +148,11 @@ func TestPeerForSession(t *testing.T) {
 				IPv6: &bconfig.AddressFamilyConfig{
 					ImportFilter: filter.NewDrainFilter(),
 					ExportFilter: exportFilter,
-					RIB:          rib,
 					AddPathSend: routingtable.ClientOptions{
 						BestOnly: true,
 					},
 				},
+				VRF: vrf,
 			},
 		},
 	}
@@ -160,7 +160,7 @@ func TestPeerForSession(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			bs := &bgpServer{
-				rib: rib,
+				vrf: vrf,
 			}
 
 			p, err := bs.peerForSession(test.session, exportFilter, routerID)

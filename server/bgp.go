@@ -3,6 +3,9 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/bio-routing/bio-rd/routingtable/locRIB"
+	"github.com/bio-routing/bio-rd/routingtable/vrf"
+	"github.com/pkg/errors"
 	"net"
 	"time"
 
@@ -13,7 +16,6 @@ import (
 	"github.com/bio-routing/bio-rd/routingtable"
 	"github.com/bio-routing/bio-rd/routingtable/filter"
 	"github.com/bio-routing/bio-rd/routingtable/filter/actions"
-	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 	"github.com/czerwonk/bioject/config"
 	log "github.com/sirupsen/logrus"
 	"go.opencensus.io/stats"
@@ -21,14 +23,16 @@ import (
 )
 
 type bgpServer struct {
-	rib           *locRIB.LocRIB
+	vrf           *vrf.VRF
 	metrics       *Metrics
 	listenAddress net.IP
 }
 
 func newBGPserver(metrics *Metrics, listenAddress net.IP) *bgpServer {
+	v, _ := vrf.New("master")
+
 	s := &bgpServer{
-		rib:           locRIB.New(),
+		vrf:           v,
 		metrics:       metrics,
 		listenAddress: listenAddress,
 	}
@@ -41,7 +45,7 @@ func (bs *bgpServer) start(c *config.Config) error {
 
 	routerID, err := bnet.IPFromString(c.RouterID)
 	if err != nil {
-		return fmt.Errorf("could not parse router id: %v", err)
+		return errors.Wrap(err, "could not parse router id")
 	}
 
 	err = b.Start(&bconfig.Global{
@@ -51,12 +55,12 @@ func (bs *bgpServer) start(c *config.Config) error {
 		LocalAddressList: []net.IP{bs.listenAddress},
 	})
 	if err != nil {
-		return fmt.Errorf("unable to start BGP server: %v", err)
+		return errors.Wrap(err, "unable to start BGP server")
 	}
 
 	f, err := bs.exportFilter(c)
 	if err != nil {
-		return fmt.Errorf("could not create export filter from config: %v", err)
+		return errors.Wrap(err, "could not create export filter from config")
 	}
 
 	for _, sess := range c.Sessions {
@@ -126,10 +130,10 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, rout
 		KeepAlive:         time.Second * 30,
 		Passive:           sess.Passive,
 		RouterID:          routerID,
+		VRF:               bs.vrf,
 	}
 
 	addressFamily := &bconfig.AddressFamilyConfig{
-		RIB:          bs.rib,
 		ExportFilter: f,
 		ImportFilter: filter.NewDrainFilter(),
 		AddPathSend: routingtable.ClientOptions{
@@ -150,11 +154,13 @@ func (bs *bgpServer) addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path
 	ctx, span := trace.StartSpan(ctx, "BGP.AddPath")
 	defer span.End()
 
-	if bs.rib.ContainsPfxPath(pfx, p) {
+	rib := bs.ribForPrefix(pfx)
+
+	if rib.ContainsPfxPath(pfx, p) {
 		return nil
 	}
 
-	err := bs.rib.AddPath(pfx, p)
+	err := rib.AddPath(pfx, p)
 	if err == nil {
 		log.Infof("Added route: %s via %s\n", pfx, p.BGPPath.NextHop)
 		stats.Record(ctx, bs.metrics.routesAdded.M(1))
@@ -167,15 +173,25 @@ func (bs *bgpServer) removePath(ctx context.Context, pfx bnet.Prefix, p *route.P
 	ctx, span := trace.StartSpan(ctx, "BGP.RemovePath")
 	defer span.End()
 
-	if !bs.rib.ContainsPfxPath(pfx, p) {
+	rib := bs.ribForPrefix(pfx)
+
+	if !rib.ContainsPfxPath(pfx, p) {
 		return true
 	}
 
-	res := bs.rib.RemovePath(pfx, p)
+	res := rib.RemovePath(pfx, p)
 	if res {
 		log.Infof("Removed route: %s via %s\n", pfx, p.BGPPath.NextHop)
 		stats.Record(ctx, bs.metrics.routesWithdrawn.M(1))
 	}
 
 	return res
+}
+
+func (bs *bgpServer) ribForPrefix(pfx bnet.Prefix) *locRIB.LocRIB {
+	if pfx.Addr().IsIPv4() {
+		return bs.vrf.IPv4UnicastRIB()
+	}
+
+	return bs.vrf.IPv6UnicastRIB()
 }

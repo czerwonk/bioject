@@ -1,7 +1,7 @@
 module github.com/czerwonk/bioject
 
 require (
-	github.com/bio-routing/bio-rd v0.0.0-20181031223100-b5bf691f08fdb1774e28e4cf9729eb4fe93b5106
+	github.com/bio-routing/bio-rd v0.0.0-20181031223100-master
 	github.com/denisenkom/go-mssqldb v0.0.0-20190204142019-df6d76eb9289 // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/go-sql-driver/mysql v1.4.1 // indirect
@@ -20,7 +20,6 @@ require (
 	github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d // indirect
 	github.com/sirupsen/logrus v1.3.0
 	github.com/stretchr/testify v1.2.2
-	github.com/taktv6/tflow2 v0.0.0-20180909125332-c05b18bd57ea // indirect
 	go.opencensus.io v0.18.0
 	golang.org/x/net v0.0.0-20181220203305-927f97764cc3
 	google.golang.org/grpc v1.17.0

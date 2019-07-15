@@ -1,5 +1,5 @@
 FROM golang as builder
-RUN go get github.com/czerwonk/bioject/cmd/bioject
+RUN export GO111MODULE=on && go get github.com/czerwonk/bioject/cmd/bioject
 
 FROM debian
 ENV ZIPKIN_ENDPOINT ""

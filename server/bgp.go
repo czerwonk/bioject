@@ -2,11 +2,12 @@ package server
 
 import (
 	"context"
+	"net"
+	"time"
+
 	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 	"github.com/bio-routing/bio-rd/routingtable/vrf"
 	"github.com/pkg/errors"
-	"net"
-	"time"
 
 	bconfig "github.com/bio-routing/bio-rd/config"
 	bnet "github.com/bio-routing/bio-rd/net"
@@ -28,7 +29,7 @@ type bgpServer struct {
 }
 
 func newBGPserver(metrics *Metrics, listenAddress net.IP) *bgpServer {
-	v, _ := vrf.New("master")
+	v, _ := vrf.New("master", 254)
 
 	s := &bgpServer{
 		vrf:           v,

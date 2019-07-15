@@ -1,7 +1,7 @@
 module github.com/czerwonk/bioject
 
 require (
-	github.com/bio-routing/bio-rd v0.0.0-20190214164457-1f3d43687ecd
+	github.com/bio-routing/bio-rd v0.0.0-20190714173138-951fd74266a8
 	github.com/denisenkom/go-mssqldb v0.0.0-20190204142019-df6d76eb9289 // indirect
 	github.com/erikstmartin/go-testdb v0.0.0-20160219214506-8d10e4a1bae5 // indirect
 	github.com/go-sql-driver/mysql v1.4.1 // indirect

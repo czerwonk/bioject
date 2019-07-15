@@ -3,8 +3,8 @@ cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 git.apache.org/thrift.git v0.0.0-20180902110319-2566ecd5d999/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973 h1:xJ4a3vCFaGF/jqvzLMYoU8P317H5OQ+Via4RmuPwCS0=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
-github.com/bio-routing/bio-rd v0.0.0-20190214164457-1f3d43687ecd h1:7CWwxzEduMSk6AENGjcgboQSixROid1y1l8+TrR6Rgc=
-github.com/bio-routing/bio-rd v0.0.0-20190214164457-1f3d43687ecd/go.mod h1:ZNKDaagsugQg4s3Xfsiu2LovL5neqEc0nLfq7rKDzIA=
+github.com/bio-routing/bio-rd v0.0.0-20190714173138-951fd74266a8 h1:FbN4LQ4SVpNXEUWG4PF5MY43XZVqK1X2xmhGKJTdriU=
+github.com/bio-routing/bio-rd v0.0.0-20190714173138-951fd74266a8/go.mod h1:/P1M1M2mtnF9xObbQmY6CXKwwrGmR4knZ14CnGt9sQM=
 github.com/bio-routing/tflow2 v0.0.0-20181230153523-2e308a4a3c3a h1:CsHtkAummoG7yhc9+6NRBkoPcTzSSmTfiyzWx5NwFPw=
 github.com/bio-routing/tflow2 v0.0.0-20181230153523-2e308a4a3c3a/go.mod h1:tjzJ5IykdbWNs1FjmiJWsH6SRBl+aWgxO5I44DAegIw=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=

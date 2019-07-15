@@ -19,7 +19,7 @@ import (
 	"go.opencensus.io/trace"
 )
 
-const version = "0.2.2"
+const version = "0.2.3"
 
 func main() {
 	configFile := flag.String("config-file", "config.yml", "Path to config file")

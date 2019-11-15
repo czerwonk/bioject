@@ -112,16 +112,22 @@ func (bs *bgpServer) addPeer(sess *config.Session, c *config.Config, f *filter.F
 }
 
 func (bs *bgpServer) peerForSession(sess *config.Session, c *config.Config, f *filter.Filter, routerID uint32) (bgp.PeerConfig, error) {
-	ip, err := bnet.IPFromString(sess.IP)
+	peerIP, err := bnet.IPFromString(sess.PeerIP)
 	if err != nil {
-		return bgp.PeerConfig{}, errors.Wrapf(err, "could not parse IP for session %s", sess.Name)
+		return bgp.PeerConfig{}, errors.Wrapf(err, "could not parse peer IP for session %s", sess.Name)
+	}
+
+	localIP, err := bnet.IPFromString(sess.LocalIP)
+	if err != nil {
+		return bgp.PeerConfig{}, errors.Wrapf(err, "could not parse local IP for session %s", sess.Name)
 	}
 
 	p := bgp.PeerConfig{
 		LocalAS:           c.LocalAS,
 		AdminEnabled:      true,
 		PeerAS:            sess.RemoteAS,
-		PeerAddress:       ip,
+		PeerAddress:       peerIP,
+		LocalAddress:      localIP,
 		ReconnectInterval: time.Second * 15,
 		HoldTime:          time.Second * 90,
 		KeepAlive:         time.Second * 30,
@@ -139,7 +145,7 @@ func (bs *bgpServer) peerForSession(sess *config.Session, c *config.Config, f *f
 		AddPathRecv: false,
 	}
 
-	if ip.IsIPv4() {
+	if peerIP.IsIPv4() {
 		p.IPv4 = addressFamily
 	} else {
 		p.IPv6 = addressFamily

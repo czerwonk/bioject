@@ -26,8 +26,8 @@ func TestConvertToBioRoute(t *testing.T) {
 				LocalPref: 100,
 				MED:       1,
 				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
-
-				EBGP: true,
+				Source:    &bnet.IP{},
+				EBGP:      true,
 			},
 			Communities: &types.Communities{
 				3199533179,
@@ -60,6 +60,7 @@ func TestConvertToDatabaseRoute(t *testing.T) {
 				LocalPref: 200,
 				MED:       1,
 				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
+				Source:    &bnet.IP{},
 			},
 			Communities: &types.Communities{
 				3199533179,

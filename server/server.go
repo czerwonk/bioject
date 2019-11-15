@@ -41,6 +41,7 @@ func restoreRoutes(bgp *bgpServer, db *database.Database) error {
 	for _, r := range routes {
 		log.Infof("Restoring route: %s via %s", r.Prefix, r.NextHop)
 		pfx, path, err := convertToBioRoute(r)
+
 		if err != nil {
 			return fmt.Errorf("could not convert %s via %s: %v", r.Prefix, r.NextHop, err)
 		}

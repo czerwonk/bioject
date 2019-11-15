@@ -50,6 +50,7 @@ func convertToBioRoute(r *database.Route) (pfx *bnet.Prefix, path *route.Path, e
 		Type: route.BGPPathType,
 		BGPPath: &route.BGPPath{
 			BGPPathA: &route.BGPPathA{
+				Source:    &bnet.IP{},
 				LocalPref: uint32(r.LocalPref),
 				MED:       uint32(r.MED),
 				NextHop:   nextHop,

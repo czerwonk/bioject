@@ -120,6 +120,7 @@ func (s *apiServer) pathForRoute(r *pb.Route) (*route.Path, error) {
 		BGPPath: &route.BGPPath{
 			ASPath: emptyASPath(),
 			BGPPathA: &route.BGPPathA{
+				Source:    &bnet.IP{},
 				LocalPref: uint32(r.LocalPref),
 				MED:       uint32(r.Med),
 				NextHop:   nextHopIP,

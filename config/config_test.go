@@ -33,7 +33,8 @@ func TestLoad(t *testing.T) {
 					{
 						Name:     "session1",
 						RemoteAS: 202739,
-						IP:       "2001:678:1e0:b::1",
+						LocalIP:  "2001:678::1",
+						PeerIP:   "2001:678:1e0:b::1",
 						Passive:  true,
 					},
 				},

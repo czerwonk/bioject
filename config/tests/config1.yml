@@ -10,5 +10,6 @@ route_filters:
 sessions:
   - name: session1
     remote_as: 202739
-    ip: 2001:678:1e0:b::1
+    local_ip: 2001:678::1
+    peer_ip: 2001:678:1e0:b::1
     passive: true

@@ -31,8 +31,11 @@ type Session struct {
 	// ASN of the peer
 	RemoteAS uint32 `yaml:"remote_as"`
 
+	// Local IP address
+	LocalIP string `yaml:"local_ip"`
+
 	// IP of the peer
-	IP string `yaml:"ip"`
+	PeerIP string `yaml:"peer_ip"`
 
 	// Passive defines if bioject should initiate a connection or wait to be connected
 	Passive bool `yaml:"passive,omitempty"`

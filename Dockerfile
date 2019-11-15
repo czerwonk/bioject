@@ -11,7 +11,6 @@ WORKDIR /app
 COPY --from=builder /go/bin/bioject .
 CMD ./bioject -config-file="$CONFIG_PATH/config.yml" -db-file="$DataPath/routes.db" -zipkin-endpoint=$ZipkinEndpoint
 VOLUME /config
-VOLUME /data
 EXPOSE 179
 EXPOSE 1337
 EXPOSE 9500

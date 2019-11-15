@@ -1,13 +1,14 @@
 package server
 
 import (
-	"github.com/bio-routing/bio-rd/routingtable/vrf"
 	"testing"
 	"time"
 
+	bgp "github.com/bio-routing/bio-rd/protocols/bgp/server"
+	"github.com/bio-routing/bio-rd/routingtable/vrf"
+
 	"github.com/bio-routing/bio-rd/routingtable"
 
-	bconfig "github.com/bio-routing/bio-rd/config"
 	bnet "github.com/bio-routing/bio-rd/net"
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/bio-routing/bio-rd/routingtable/filter"
@@ -20,8 +21,8 @@ func TestExportFilter(t *testing.T) {
 	tests := []struct {
 		name         string
 		config       *config.Config
-		expectAccept []bnet.Prefix
-		expectReject []bnet.Prefix
+		expectAccept []*bnet.Prefix
+		expectReject []*bnet.Prefix
 	}{
 		{
 			name: "2 route filters",
@@ -41,13 +42,13 @@ func TestExportFilter(t *testing.T) {
 					},
 				},
 			},
-			expectAccept: []bnet.Prefix{
+			expectAccept: []*bnet.Prefix{
 				bnet.NewPfx(bnet.IPv6FromBlocks(0x2001, 0x678, 0x1e0, 0, 0, 0, 0, 1), 127),
 				bnet.NewPfx(bnet.IPv6FromBlocks(0x2001, 0x678, 0x1e0, 0, 0, 0, 0, 1), 128),
 				bnet.NewPfx(bnet.IPv4FromOctets(192, 168, 0, 4), 30),
 				bnet.NewPfx(bnet.IPv4FromOctets(192, 168, 0, 0), 32),
 			},
-			expectReject: []bnet.Prefix{
+			expectReject: []*bnet.Prefix{
 				bnet.NewPfx(bnet.IPv4(0), 0),
 				bnet.NewPfx(bnet.IPv6(0, 0), 0),
 				bnet.NewPfx(bnet.IPv4FromOctets(127, 0, 0, 1), 8),
@@ -61,7 +62,7 @@ func TestExportFilter(t *testing.T) {
 			config: &config.Config{
 				Filters: []*config.RouteFilter{},
 			},
-			expectAccept: []bnet.Prefix{
+			expectAccept: []*bnet.Prefix{
 				bnet.NewPfx(bnet.IPv4(0), 0),
 				bnet.NewPfx(bnet.IPv6(0, 0), 0),
 				bnet.NewPfx(bnet.IPv4FromOctets(127, 0, 0, 1), 8),
@@ -80,13 +81,15 @@ func TestExportFilter(t *testing.T) {
 			}
 
 			for _, pfx := range test.expectAccept {
-				if _, rejected := f.ProcessTerms(pfx, &route.Path{}); rejected {
+				r := f.Process(pfx, &route.Path{})
+				if r.Reject {
 					t.Fatalf("expected prefix %s to be accepted", pfx)
 				}
 			}
 
 			for _, pfx := range test.expectReject {
-				if _, rejected := f.ProcessTerms(pfx, &route.Path{}); !rejected {
+				r := f.Process(pfx, &route.Path{})
+				if !r.Reject {
 					t.Fatalf("expected prefix %s to be rejected", pfx)
 				}
 			}
@@ -96,33 +99,39 @@ func TestExportFilter(t *testing.T) {
 
 func TestPeerForSession(t *testing.T) {
 	exportFilter := filter.NewDrainFilter()
-	vrf, _ := vrf.New("master")
+	vrf, _ := vrf.New("master", 254)
 
 	routerID := bnet.IPv4FromOctets(127, 0, 0, 1).ToUint32()
+	cfg := &config.Config{
+		LocalAS: 202739,
+	}
 
 	tests := []struct {
 		name     string
 		session  *config.Session
-		expected bconfig.Peer
+		expected bgp.PeerConfig
 	}{
 		{
 			name: "IPv4 peer",
 			session: &config.Session{
 				Name:     "test",
-				IP:       "192.168.1.1",
+				LocalIP:  "127.0.0.1",
+				PeerIP:   "192.168.1.1",
 				RemoteAS: 65500,
 			},
-			expected: bconfig.Peer{
+			expected: bgp.PeerConfig{
 				AdminEnabled:      true,
 				PeerAS:            65500,
+				LocalAS:           202739,
+				LocalAddress:      bnet.IPv4FromOctets(127, 0, 0, 1),
 				PeerAddress:       bnet.IPv4FromOctets(192, 168, 1, 1),
 				ReconnectInterval: time.Second * 15,
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
 				RouterID:          routerID,
-				IPv4: &bconfig.AddressFamilyConfig{
-					ImportFilter: filter.NewDrainFilter(),
-					ExportFilter: exportFilter,
+				IPv4: &bgp.AddressFamilyConfig{
+					ImportFilterChain: filter.Chain{filter.NewDrainFilter()},
+					ExportFilterChain: filter.Chain{exportFilter},
 					AddPathSend: routingtable.ClientOptions{
 						BestOnly: true,
 					},
@@ -134,20 +143,23 @@ func TestPeerForSession(t *testing.T) {
 			name: "IPv6 peer",
 			session: &config.Session{
 				Name:     "test",
-				IP:       "2001:678:1e0::1",
-				RemoteAS: 202739,
+				LocalIP:  "2001:678:1e0::1",
+				PeerIP:   "2001:678:1e0:b::1",
+				RemoteAS: 65500,
 			},
-			expected: bconfig.Peer{
+			expected: bgp.PeerConfig{
 				AdminEnabled:      true,
-				PeerAS:            202739,
-				PeerAddress:       bnet.IPv6FromBlocks(0x2001, 0x678, 0x1e0, 0, 0, 0, 0, 1),
+				PeerAS:            65500,
+				LocalAS:           202739,
+				PeerAddress:       bnet.IPv6FromBlocks(0x2001, 0x678, 0x1e0, 0xb, 0, 0, 0, 1),
+				LocalAddress:      bnet.IPv6FromBlocks(0x2001, 0x678, 0x1e0, 0, 0, 0, 0, 1),
 				ReconnectInterval: time.Second * 15,
 				HoldTime:          time.Second * 90,
 				KeepAlive:         time.Second * 30,
 				RouterID:          routerID,
-				IPv6: &bconfig.AddressFamilyConfig{
-					ImportFilter: filter.NewDrainFilter(),
-					ExportFilter: exportFilter,
+				IPv6: &bgp.AddressFamilyConfig{
+					ImportFilterChain: filter.Chain{filter.NewDrainFilter()},
+					ExportFilterChain: filter.Chain{exportFilter},
 					AddPathSend: routingtable.ClientOptions{
 						BestOnly: true,
 					},
@@ -163,7 +175,7 @@ func TestPeerForSession(t *testing.T) {
 				vrf: vrf,
 			}
 
-			p, err := bs.peerForSession(test.session, exportFilter, routerID)
+			p, err := bs.peerForSession(test.session, cfg, exportFilter, routerID)
 			if err != nil {
 				t.Fatal(err)
 			}

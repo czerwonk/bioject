@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	bnet "github.com/bio-routing/bio-rd/net"
-	"github.com/bio-routing/bio-rd/protocols/bgp/types"
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/czerwonk/bioject/api"
 	"github.com/czerwonk/bioject/database"
@@ -22,12 +21,12 @@ type bgpMock struct {
 	removeCalled bool
 }
 
-func (m *bgpMock) addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path) error {
+func (m *bgpMock) addPath(ctx context.Context, pfx *bnet.Prefix, p *route.Path) error {
 	m.addCalled = true
 	return m.addResult
 }
 
-func (m *bgpMock) removePath(ctx context.Context, pfx bnet.Prefix, p *route.Path) bool {
+func (m *bgpMock) removePath(ctx context.Context, pfx *bnet.Prefix, p *route.Path) bool {
 	m.removeCalled = true
 	return m.removeResult
 }
@@ -298,11 +297,14 @@ func TestPathForRoute(t *testing.T) {
 				Med:       1,
 			},
 			expected: &route.BGPPath{
-				ASPath:    make(types.ASPath, 0),
-				EBGP:      true,
-				LocalPref: 200,
-				MED:       1,
-				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
+				ASPath: emptyASPath(),
+				BGPPathA: &route.BGPPathA{
+					EBGP:      true,
+					LocalPref: 200,
+					MED:       1,
+					NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
+					Source:    &bnet.IP{},
+				},
 			},
 		},
 		{
@@ -313,11 +315,14 @@ func TestPathForRoute(t *testing.T) {
 				Med:       1,
 			},
 			expected: &route.BGPPath{
-				ASPath:    make(types.ASPath, 0),
-				EBGP:      true,
-				LocalPref: 200,
-				MED:       1,
-				NextHop:   bnet.IPv6FromBlocks(0x2001, 0x0678, 0x01e0, 0, 0, 0, 0, 1),
+				ASPath: emptyASPath(),
+				BGPPathA: &route.BGPPathA{
+					EBGP:      true,
+					LocalPref: 200,
+					MED:       1,
+					NextHop:   bnet.IPv6FromBlocks(0x2001, 0x0678, 0x01e0, 0, 0, 0, 0, 1),
+					Source:    &bnet.IP{},
+				},
 			},
 		},
 		{

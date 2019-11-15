@@ -9,7 +9,6 @@ import (
 	"github.com/bio-routing/bio-rd/routingtable/vrf"
 	"github.com/pkg/errors"
 
-	bconfig "github.com/bio-routing/bio-rd/config"
 	bnet "github.com/bio-routing/bio-rd/net"
 	bgp "github.com/bio-routing/bio-rd/protocols/bgp/server"
 	"github.com/bio-routing/bio-rd/route"
@@ -41,19 +40,13 @@ func newBGPserver(metrics *Metrics, listenAddress net.IP) *bgpServer {
 }
 
 func (bs *bgpServer) start(c *config.Config) error {
-	b := bgp.NewBgpServer()
-
 	routerID, err := bnet.IPFromString(c.RouterID)
 	if err != nil {
 		return errors.Wrap(err, "could not parse router id")
 	}
 
-	err = b.Start(&bconfig.Global{
-		Listen:           true,
-		LocalASN:         c.LocalAS,
-		RouterID:         routerID.ToUint32(),
-		LocalAddressList: []net.IP{bs.listenAddress},
-	})
+	b := bgp.NewBGPServer(routerID.ToUint32(), []string{bs.listenAddress.String() + ":179"})
+	err = b.Start()
 	if err != nil {
 		return errors.Wrap(err, "unable to start BGP server")
 	}
@@ -64,7 +57,7 @@ func (bs *bgpServer) start(c *config.Config) error {
 	}
 
 	for _, sess := range c.Sessions {
-		bs.addPeer(sess, f, b)
+		bs.addPeer(sess, c, f, b)
 	}
 
 	return nil
@@ -84,29 +77,32 @@ func (bs *bgpServer) exportFilter(c *config.Config) (*filter.Filter, error) {
 
 		pfx := bnet.NewPfx(net, f.Length)
 
-		routeFilters[i] = filter.NewRouteFilter(pfx, filter.InRange(f.Min, f.Max))
+		m := filter.NewInRangeMatcher(f.Min, f.Max)
+		routeFilters[i] = filter.NewRouteFilter(pfx, m)
 	}
 
 	terms := []*filter.Term{
 		filter.NewTerm(
+			"Allow configured prefixes",
 			[]*filter.TermCondition{
 				filter.NewTermConditionWithRouteFilters(routeFilters...),
 			},
-			[]filter.Action{
+			[]actions.Action{
 				&actions.AcceptAction{},
 			}),
 		filter.NewTerm(
+			"Reject all",
 			[]*filter.TermCondition{},
-			[]filter.Action{
+			[]actions.Action{
 				&actions.RejectAction{},
 			}),
 	}
 
-	return filter.NewFilter(terms), nil
+	return filter.NewFilter("Peer-Out", terms), nil
 }
 
-func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPServer) error {
-	p, err := bs.peerForSession(sess, f, b.RouterID())
+func (bs *bgpServer) addPeer(sess *config.Session, c *config.Config, f *filter.Filter, b bgp.BGPServer) error {
+	p, err := bs.peerForSession(sess, c, f, b.RouterID())
 	if err != nil {
 		return err
 	}
@@ -115,13 +111,14 @@ func (bs *bgpServer) addPeer(sess *config.Session, f *filter.Filter, b bgp.BGPSe
 	return nil
 }
 
-func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, routerID uint32) (bconfig.Peer, error) {
+func (bs *bgpServer) peerForSession(sess *config.Session, c *config.Config, f *filter.Filter, routerID uint32) (bgp.PeerConfig, error) {
 	ip, err := bnet.IPFromString(sess.IP)
 	if err != nil {
-		return bconfig.Peer{}, errors.Wrapf(err, "could not parse IP for session %s", sess.Name)
+		return bgp.PeerConfig{}, errors.Wrapf(err, "could not parse IP for session %s", sess.Name)
 	}
 
-	p := bconfig.Peer{
+	p := bgp.PeerConfig{
+		LocalAS:           c.LocalAS,
 		AdminEnabled:      true,
 		PeerAS:            sess.RemoteAS,
 		PeerAddress:       ip,
@@ -133,9 +130,9 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, rout
 		VRF:               bs.vrf,
 	}
 
-	addressFamily := &bconfig.AddressFamilyConfig{
-		ExportFilter: f,
-		ImportFilter: filter.NewDrainFilter(),
+	addressFamily := &bgp.AddressFamilyConfig{
+		ExportFilterChain: filter.Chain{f},
+		ImportFilterChain: filter.Chain{filter.NewDrainFilter()},
 		AddPathSend: routingtable.ClientOptions{
 			BestOnly: true,
 		},
@@ -151,7 +148,7 @@ func (bs *bgpServer) peerForSession(sess *config.Session, f *filter.Filter, rout
 	return p, nil
 }
 
-func (bs *bgpServer) addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path) error {
+func (bs *bgpServer) addPath(ctx context.Context, pfx *bnet.Prefix, p *route.Path) error {
 	ctx, span := trace.StartSpan(ctx, "BGP.AddPath")
 	defer span.End()
 
@@ -163,14 +160,14 @@ func (bs *bgpServer) addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path
 
 	err := rib.AddPath(pfx, p)
 	if err == nil {
-		log.Infof("Added route: %s via %s\n", pfx, p.BGPPath.NextHop)
+		log.Infof("Added route: %s via %s\n", pfx, p.BGPPath.BGPPathA.NextHop)
 		stats.Record(ctx, bs.metrics.routesAdded.M(1))
 	}
 
 	return err
 }
 
-func (bs *bgpServer) removePath(ctx context.Context, pfx bnet.Prefix, p *route.Path) bool {
+func (bs *bgpServer) removePath(ctx context.Context, pfx *bnet.Prefix, p *route.Path) bool {
 	ctx, span := trace.StartSpan(ctx, "BGP.RemovePath")
 	defer span.End()
 
@@ -182,14 +179,14 @@ func (bs *bgpServer) removePath(ctx context.Context, pfx bnet.Prefix, p *route.P
 
 	res := rib.RemovePath(pfx, p)
 	if res {
-		log.Infof("Removed route: %s via %s\n", pfx, p.BGPPath.NextHop)
+		log.Infof("Removed route: %s via %s\n", pfx, p.BGPPath.BGPPathA.NextHop)
 		stats.Record(ctx, bs.metrics.routesWithdrawn.M(1))
 	}
 
 	return res
 }
 
-func (bs *bgpServer) ribForPrefix(pfx bnet.Prefix) *locRIB.LocRIB {
+func (bs *bgpServer) ribForPrefix(pfx *bnet.Prefix) *locRIB.LocRIB {
 	if pfx.Addr().IsIPv4() {
 		return bs.vrf.IPv4UnicastRIB()
 	}

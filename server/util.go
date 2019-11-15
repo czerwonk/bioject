@@ -10,12 +10,17 @@ import (
 	"github.com/czerwonk/bioject/database"
 )
 
-func convertToDatabaseRoute(prefix bnet.Prefix, path *route.Path) *database.Route {
+func emptyASPath() *types.ASPath {
+	p := make(types.ASPath, 0)
+	return &p
+}
+
+func convertToDatabaseRoute(prefix *bnet.Prefix, path *route.Path) *database.Route {
 	r := &database.Route{
 		Prefix:           prefix.String(),
-		NextHop:          path.BGPPath.NextHop.String(),
-		LocalPref:        uint(path.BGPPath.LocalPref),
-		MED:              uint(path.BGPPath.MED),
+		NextHop:          path.BGPPath.BGPPathA.NextHop.String(),
+		LocalPref:        uint(path.BGPPath.BGPPathA.LocalPref),
+		MED:              uint(path.BGPPath.BGPPathA.MED),
 		Communities:      communitiesFromBioRoute(path.BGPPath.Communities),
 		LargeCommunities: largeCommunitiesFromBioRoute(path.BGPPath.LargeCommunities),
 	}
@@ -23,7 +28,7 @@ func convertToDatabaseRoute(prefix bnet.Prefix, path *route.Path) *database.Rout
 	return r
 }
 
-func convertToBioRoute(r *database.Route) (pfx bnet.Prefix, path *route.Path, err error) {
+func convertToBioRoute(r *database.Route) (pfx *bnet.Prefix, path *route.Path, err error) {
 	t := strings.Split(r.Prefix, "/")
 	net, err := bnet.IPFromString(t[0])
 	if err != nil {
@@ -38,34 +43,36 @@ func convertToBioRoute(r *database.Route) (pfx bnet.Prefix, path *route.Path, er
 
 	nextHop, err := bnet.IPFromString(r.NextHop)
 	if err != nil {
-		return bnet.Prefix{}, path, err
+		return &bnet.Prefix{}, path, err
 	}
 
 	return pfx, &route.Path{
 		Type: route.BGPPathType,
 		BGPPath: &route.BGPPath{
-			LocalPref:        uint32(r.LocalPref),
-			MED:              uint32(r.MED),
-			NextHop:          nextHop,
+			BGPPathA: &route.BGPPathA{
+				LocalPref: uint32(r.LocalPref),
+				MED:       uint32(r.MED),
+				NextHop:   nextHop,
+				EBGP:      true,
+			},
 			Communities:      communitiesFromDatabaseRoute(r.Communities),
 			LargeCommunities: largeCommunitiesFromDatabaseRoute(r.LargeCommunities),
-			EBGP:             true,
 		},
 	}, nil
 }
 
-func communitiesFromDatabaseRoute(coms []*database.Community) []uint32 {
-	res := make([]uint32, len(coms))
+func communitiesFromDatabaseRoute(coms []*database.Community) *types.Communities {
+	res := make(types.Communities, len(coms))
 
 	for i, c := range coms {
 		res[i] = uint32(c.ASN)<<16 + uint32(c.Value)
 	}
 
-	return res
+	return &res
 }
 
-func largeCommunitiesFromDatabaseRoute(coms []*database.LargeCommunity) []types.LargeCommunity {
-	res := make([]types.LargeCommunity, len(coms))
+func largeCommunitiesFromDatabaseRoute(coms []*database.LargeCommunity) *types.LargeCommunities {
+	res := make(types.LargeCommunities, len(coms))
 
 	for i, c := range coms {
 		res[i] = types.LargeCommunity{
@@ -75,13 +82,17 @@ func largeCommunitiesFromDatabaseRoute(coms []*database.LargeCommunity) []types.
 		}
 	}
 
-	return res
+	return &res
 }
 
-func communitiesFromBioRoute(coms []uint32) []*database.Community {
-	res := make([]*database.Community, len(coms))
+func communitiesFromBioRoute(coms *types.Communities) []*database.Community {
+	if coms == nil {
+		return []*database.Community{}
+	}
 
-	for i, c := range coms {
+	res := make([]*database.Community, len(*coms))
+
+	for i, c := range *coms {
 		res[i] = &database.Community{
 			ASN:   uint16((c & 0xFFFF0000) >> 16),
 			Value: uint16(c & 0x0000FFFF),
@@ -91,10 +102,14 @@ func communitiesFromBioRoute(coms []uint32) []*database.Community {
 	return res
 }
 
-func largeCommunitiesFromBioRoute(coms []types.LargeCommunity) []*database.LargeCommunity {
-	res := make([]*database.LargeCommunity, len(coms))
+func largeCommunitiesFromBioRoute(coms *types.LargeCommunities) []*database.LargeCommunity {
+	if coms == nil {
+		return []*database.LargeCommunity{}
+	}
 
-	for i, c := range coms {
+	res := make([]*database.LargeCommunity, len(*coms))
+
+	for i, c := range *coms {
 		res[i] = &database.LargeCommunity{
 			Global: c.GlobalAdministrator,
 			Data1:  c.DataPart1,

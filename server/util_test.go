@@ -22,20 +22,23 @@ func TestConvertToBioRoute(t *testing.T) {
 	expectedPath := &route.Path{
 		Type: route.BGPPathType,
 		BGPPath: &route.BGPPath{
-			LocalPref: 100,
-			MED:       1,
-			NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
-			Communities: []uint32{
+			BGPPathA: &route.BGPPathA{
+				LocalPref: 100,
+				MED:       1,
+				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
+
+				EBGP: true,
+			},
+			Communities: &types.Communities{
 				3199533179,
 			},
-			LargeCommunities: []types.LargeCommunity{
+			LargeCommunities: &types.LargeCommunities{
 				{
 					GlobalAdministrator: 202739,
 					DataPart1:           123,
 					DataPart2:           456,
 				},
 			},
-			EBGP: true,
 		},
 	}
 
@@ -53,19 +56,21 @@ func TestConvertToDatabaseRoute(t *testing.T) {
 	path := &route.Path{
 		Type: route.BGPPathType,
 		BGPPath: &route.BGPPath{
-			Communities: []uint32{
+			BGPPathA: &route.BGPPathA{
+				LocalPref: 200,
+				MED:       1,
+				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
+			},
+			Communities: &types.Communities{
 				3199533179,
 			},
-			LocalPref: 200,
-			MED:       1,
-			LargeCommunities: []types.LargeCommunity{
+			LargeCommunities: &types.LargeCommunities{
 				{
 					GlobalAdministrator: 202739,
 					DataPart1:           123,
 					DataPart2:           456,
 				},
 			},
-			NextHop: bnet.IPv4FromOctets(192, 168, 2, 1),
 		},
 	}
 

@@ -19,8 +19,8 @@ import (
 )
 
 type bgpService interface {
-	addPath(ctx context.Context, pfx bnet.Prefix, p *route.Path) error
-	removePath(ctx context.Context, pfx bnet.Prefix, p *route.Path) bool
+	addPath(ctx context.Context, pfx *bnet.Prefix, p *route.Path) error
+	removePath(ctx context.Context, pfx *bnet.Prefix, p *route.Path) bool
 }
 
 type apiServer struct {
@@ -118,26 +118,28 @@ func (s *apiServer) pathForRoute(r *pb.Route) (*route.Path, error) {
 	return &route.Path{
 		Type: route.BGPPathType,
 		BGPPath: &route.BGPPath{
-			ASPath:    make(types.ASPath, 0),
-			LocalPref: uint32(r.LocalPref),
-			MED:       uint32(r.Med),
-			NextHop:   nextHopIP,
-			EBGP:      true,
+			ASPath: emptyASPath(),
+			BGPPathA: &route.BGPPathA{
+				LocalPref: uint32(r.LocalPref),
+				MED:       uint32(r.Med),
+				NextHop:   nextHopIP,
+				EBGP:      true,
+			},
 		},
 	}, nil
 }
 
-func (s *apiServer) prefixForRequest(pfx *pb.Prefix) (bnet.Prefix, error) {
+func (s *apiServer) prefixForRequest(pfx *pb.Prefix) (*bnet.Prefix, error) {
 	ip, err := bnet.IPFromBytes(pfx.Ip)
 	if err != nil {
-		return bnet.Prefix{}, err
+		return &bnet.Prefix{}, err
 	}
 
 	return bnet.NewPfx(ip, uint8(pfx.Length)), nil
 }
 
 func (s *apiServer) addCommunitiesToBGPPath(p *route.BGPPath, req *pb.AddRouteRequest) error {
-	p.Communities = make([]uint32, len(req.Communities))
+	comms := make(types.Communities, len(req.Communities))
 	for i, c := range req.Communities {
 		if c.Asn > math.MaxUint16 {
 			return fmt.Errorf("ASN part of community too large: (%d:%d)", c.Asn, c.Value)
@@ -147,21 +149,25 @@ func (s *apiServer) addCommunitiesToBGPPath(p *route.BGPPath, req *pb.AddRouteRe
 			return fmt.Errorf("Value part of community too large: (%d:%d)", c.Asn, c.Value)
 		}
 
-		p.Communities[i] = c.Asn<<16 + c.Value
+		comms[i] = c.Asn<<16 + c.Value
 	}
+
+	p.Communities = &comms
 
 	return nil
 }
 
 func (s *apiServer) addLargeCommunitiesToBGPPath(p *route.BGPPath, req *pb.AddRouteRequest) {
-	p.LargeCommunities = make([]types.LargeCommunity, len(req.Communities))
+	comms := make(types.LargeCommunities, len(req.Communities))
 	for i, c := range req.LargeCommunities {
-		p.LargeCommunities[i] = types.LargeCommunity{
+		comms[i] = types.LargeCommunity{
 			GlobalAdministrator: c.GlobalAdministrator,
 			DataPart1:           c.LocalDataPart1,
 			DataPart2:           c.LocalDataPart2,
 		}
 	}
+
+	p.LargeCommunities = &comms
 }
 
 func (s *apiServer) errorResult(code uint32, msg string) *pb.Result {

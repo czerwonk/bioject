@@ -9,7 +9,7 @@ RUN mkdir /app && \
     mkdir /data
 WORKDIR /app
 COPY --from=builder /go/bin/bioject .
-CMD ./bioject -config-file="$CONFIG_PATH/config.yml" -db-file="$DataPath/routes.db" -zipkin-endpoint=$ZipkinEndpoint
+CMD ./bioject -config-file="$CONFIG_PATH/config.yml" -db-file="$DATA_PATH/routes.db" -zipkin-endpoint=$ZipkinEndpoint
 VOLUME /config
 EXPOSE 179
 EXPOSE 1337

@@ -58,6 +58,7 @@ func convertToBioRoute(r *database.Route) (pfx *bnet.Prefix, path *route.Path, e
 			},
 			Communities:      communitiesFromDatabaseRoute(r.Communities),
 			LargeCommunities: largeCommunitiesFromDatabaseRoute(r.LargeCommunities),
+			ASPath:           emptyASPath(),
 		},
 	}, nil
 }

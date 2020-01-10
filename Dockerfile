@@ -1,5 +1,7 @@
 FROM golang as builder
-RUN export GO111MODULE=on && go get github.com/czerwonk/bioject/cmd/bioject
+ADD . /go/bioject/
+WORKDIR /go/bioject/cmd/bioject
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/bioject
 
 FROM debian
 ENV ZIPKIN_ENDPOINT ""

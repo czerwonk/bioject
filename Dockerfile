@@ -1,7 +1,7 @@
 FROM golang as builder
 ADD . /go/bioject/
 WORKDIR /go/bioject/cmd/bioject
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/bioject
+RUN GOOS=linux go build -o /go/bin/bioject
 
 FROM debian
 ENV ZIPKIN_ENDPOINT ""

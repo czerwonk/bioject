@@ -123,7 +123,7 @@ func (s *apiServer) pathForRoute(r *pb.Route) (*route.Path, error) {
 				Source:    &bnet.IP{},
 				LocalPref: uint32(r.LocalPref),
 				MED:       uint32(r.Med),
-				NextHop:   nextHopIP,
+				NextHop:   nextHopIP.Ptr(),
 				EBGP:      true,
 			},
 		},
@@ -136,7 +136,7 @@ func (s *apiServer) prefixForRequest(pfx *pb.Prefix) (*bnet.Prefix, error) {
 		return &bnet.Prefix{}, err
 	}
 
-	return bnet.NewPfx(ip, uint8(pfx.Length)), nil
+	return bnet.NewPfx(ip, uint8(pfx.Length)).Ptr(), nil
 }
 
 func (s *apiServer) addCommunitiesToBGPPath(p *route.BGPPath, req *pb.AddRouteRequest) error {

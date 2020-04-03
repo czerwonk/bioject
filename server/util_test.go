@@ -25,7 +25,7 @@ func TestConvertToBioRoute(t *testing.T) {
 			BGPPathA: &route.BGPPathA{
 				LocalPref: 100,
 				MED:       1,
-				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
+				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1).Ptr(),
 				Source:    &bnet.IP{},
 				EBGP:      true,
 			},
@@ -60,7 +60,7 @@ func TestConvertToDatabaseRoute(t *testing.T) {
 			BGPPathA: &route.BGPPathA{
 				LocalPref: 200,
 				MED:       1,
-				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1),
+				NextHop:   bnet.IPv4FromOctets(192, 168, 2, 1).Ptr(),
 				Source:    &bnet.IP{},
 			},
 			Communities: &types.Communities{
@@ -82,7 +82,7 @@ func TestConvertToDatabaseRoute(t *testing.T) {
 	expected.LocalPref = 200
 	expected.MED = 1
 
-	r := convertToDatabaseRoute(pfx, path)
+	r := convertToDatabaseRoute(&pfx, path)
 
 	assert.Equal(t, expected, r)
 }

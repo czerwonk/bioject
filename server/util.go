@@ -39,7 +39,7 @@ func convertToBioRoute(r *database.Route) (pfx *bnet.Prefix, path *route.Path, e
 	if err != nil {
 		return pfx, path, err
 	}
-	pfx = bnet.NewPfx(net, uint8(length))
+	pfx = bnet.NewPfx(net, uint8(length)).Ptr()
 
 	nextHop, err := bnet.IPFromString(r.NextHop)
 	if err != nil {
@@ -53,7 +53,7 @@ func convertToBioRoute(r *database.Route) (pfx *bnet.Prefix, path *route.Path, e
 				Source:    &bnet.IP{},
 				LocalPref: uint32(r.LocalPref),
 				MED:       uint32(r.MED),
-				NextHop:   nextHop,
+				NextHop:   &nextHop,
 				EBGP:      true,
 			},
 			Communities:      communitiesFromDatabaseRoute(r.Communities),

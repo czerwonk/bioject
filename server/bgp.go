@@ -78,7 +78,7 @@ func (bs *bgpServer) exportFilter(c *config.Config) (*filter.Filter, error) {
 		pfx := bnet.NewPfx(net, f.Length)
 
 		m := filter.NewInRangeMatcher(f.Min, f.Max)
-		routeFilters[i] = filter.NewRouteFilter(pfx, m)
+		routeFilters[i] = filter.NewRouteFilter(pfx.Ptr(), m)
 	}
 
 	terms := []*filter.Term{
@@ -126,8 +126,8 @@ func (bs *bgpServer) peerForSession(sess *config.Session, c *config.Config, f *f
 		LocalAS:           c.LocalAS,
 		AdminEnabled:      true,
 		PeerAS:            sess.RemoteAS,
-		PeerAddress:       peerIP,
-		LocalAddress:      localIP,
+		PeerAddress:       peerIP.Ptr(),
+		LocalAddress:      localIP.Ptr(),
 		ReconnectInterval: time.Second * 15,
 		HoldTime:          time.Second * 90,
 		KeepAlive:         time.Second * 30,

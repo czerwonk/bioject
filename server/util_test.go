@@ -48,7 +48,7 @@ func TestConvertToBioRoute(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, expectedPrefix, pfx, "Prefix")
+	assert.Equal(t, &expectedPrefix, pfx, "Prefix")
 	assert.Equal(t, expectedPath, p, "Path")
 }
 

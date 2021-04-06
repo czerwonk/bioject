@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/czerwonk/bioject/api"
+	"github.com/czerwonk/bioject/pkg/api"
 	pb "github.com/czerwonk/bioject/proto"
 	"go.opencensus.io/stats"
 )

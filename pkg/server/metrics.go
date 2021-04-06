@@ -3,8 +3,8 @@ package server
 import (
 	"net/http"
 
+	"contrib.go.opencensus.io/exporter/prometheus"
 	log "github.com/sirupsen/logrus"
-	"go.opencensus.io/exporter/prometheus"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/stats/view"
 )

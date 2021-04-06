@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/czerwonk/bioject/config"
-	"github.com/czerwonk/bioject/database"
+	"github.com/czerwonk/bioject/pkg/config"
+	"github.com/czerwonk/bioject/pkg/database"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -14,7 +14,7 @@ import (
 	"github.com/bio-routing/bio-rd/routingtable/filter"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/czerwonk/bioject/config"
+	"github.com/czerwonk/bioject/pkg/config"
 )
 
 func TestExportFilter(t *testing.T) {

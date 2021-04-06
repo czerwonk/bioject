@@ -13,7 +13,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/czerwonk/bioject/api"
+	"github.com/czerwonk/bioject/pkg/api"
 	pb "github.com/czerwonk/bioject/proto"
 )
 

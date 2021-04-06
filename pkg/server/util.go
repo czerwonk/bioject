@@ -7,7 +7,7 @@ import (
 	bnet "github.com/bio-routing/bio-rd/net"
 	"github.com/bio-routing/bio-rd/protocols/bgp/types"
 	"github.com/bio-routing/bio-rd/route"
-	"github.com/czerwonk/bioject/database"
+	"github.com/czerwonk/bioject/pkg/database"
 )
 
 func emptyASPath() *types.ASPath {

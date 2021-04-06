@@ -7,8 +7,8 @@ import (
 
 	bnet "github.com/bio-routing/bio-rd/net"
 	"github.com/bio-routing/bio-rd/route"
-	"github.com/czerwonk/bioject/api"
-	"github.com/czerwonk/bioject/database"
+	"github.com/czerwonk/bioject/pkg/api"
+	"github.com/czerwonk/bioject/pkg/database"
 	pb "github.com/czerwonk/bioject/proto"
 	"github.com/stretchr/testify/assert"
 )

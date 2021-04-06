@@ -8,18 +8,18 @@ import (
 	"net"
 	"os"
 
-	"github.com/czerwonk/bioject/config"
-	"github.com/czerwonk/bioject/database"
-	"github.com/czerwonk/bioject/server"
+	"contrib.go.opencensus.io/exporter/zipkin"
+	"github.com/czerwonk/bioject/pkg/config"
+	"github.com/czerwonk/bioject/pkg/database"
+	"github.com/czerwonk/bioject/pkg/server"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	openzipkin "github.com/openzipkin/zipkin-go"
 	zipkinHTTP "github.com/openzipkin/zipkin-go/reporter/http"
 	log "github.com/sirupsen/logrus"
-	"go.opencensus.io/exporter/zipkin"
 	"go.opencensus.io/trace"
 )
 
-const version = "0.2.5"
+const version = "0.3.0"
 
 func main() {
 	configFile := flag.String("config-file", "config.yml", "Path to config file")

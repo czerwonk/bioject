@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/czerwonk/bioject.svg)](https://travis-ci.org/czerwonk/bioject)
 [![Docker Build Statu](https://img.shields.io/docker/build/czerwonk/bioject.svg)](https://hub.docker.com/r/czerwonk/bioject/builds)
 [![Go Report Card](https://goreportcard.com/badge/github.com/czerwonk/bioject)](https://goreportcard.com/report/github.com/czerwonk/bioject)
 

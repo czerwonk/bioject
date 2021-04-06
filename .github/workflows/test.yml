@@ -22,7 +22,11 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Build
+    - name: Build server
       run: go build
+      working-directory: cmd/bioject
+    - name: Build client
+      run: go build
+      working-directory: cmd/biojecter
     - name: Run tests
       run: go test ./... -v -covermode=count

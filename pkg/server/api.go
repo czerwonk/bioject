@@ -143,11 +143,11 @@ func (s *apiServer) addCommunitiesToBGPPath(p *route.BGPPath, req *pb.AddRouteRe
 	comms := make(types.Communities, len(req.Communities))
 	for i, c := range req.Communities {
 		if c.Asn > math.MaxUint16 {
-			return fmt.Errorf("ASN part of community too large: (%d:%d)", c.Asn, c.Value)
+			return fmt.Errorf("the ASN part of community too large: (%d:%d)", c.Asn, c.Value)
 		}
 
 		if c.Value > math.MaxUint16 {
-			return fmt.Errorf("Value part of community too large: (%d:%d)", c.Asn, c.Value)
+			return fmt.Errorf("value part of community too large: (%d:%d)", c.Asn, c.Value)
 		}
 
 		comms[i] = c.Asn<<16 + c.Value

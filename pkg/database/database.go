@@ -43,7 +43,7 @@ func (d *Database) autoMigrate() error {
 
 // Save saves a route to the database
 func (d *Database) Save(ctx context.Context, route *Route) error {
-	ctx, span := trace.StartSpan(ctx, "Database.Save")
+	_, span := trace.StartSpan(ctx, "Database.Save")
 	defer span.End()
 
 	d.db.Save(route)
@@ -56,7 +56,7 @@ func (d *Database) Save(ctx context.Context, route *Route) error {
 
 // Delete removes a route from the database
 func (d *Database) Delete(ctx context.Context, route *Route) error {
-	ctx, span := trace.StartSpan(ctx, "Database.Delete")
+	_, span := trace.StartSpan(ctx, "Database.Delete")
 	defer span.End()
 
 	d.db.Delete(Route{}, "prefix = ? AND next_hop = ?", route.Prefix, route.NextHop)

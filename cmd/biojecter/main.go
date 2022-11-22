@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	log "github.com/sirupsen/logrus"
 
@@ -50,7 +51,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	conn, err := grpc.Dial(*apiAddress, grpc.WithInsecure())
+	conn, err := grpc.Dial(*apiAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Panic(err)
 	}

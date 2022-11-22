@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"gopkg.in/yaml.v2"
 )
@@ -58,7 +57,7 @@ type RouteFilter struct {
 
 // Load loads a configuration from a reader
 func Load(r io.Reader) (*Config, error) {
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	if err != nil {
 		return nil, fmt.Errorf("could not read config: %s", err)
 	}

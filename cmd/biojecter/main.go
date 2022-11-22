@@ -20,7 +20,7 @@ import (
 const version = "0.1.4"
 
 var (
-	communityRegex = regexp.MustCompile("(\\d+)\\:(\\d+)(?:\\:(\\d+))?")
+	communityRegex = regexp.MustCompile(`(\d+)\:(\d+)(?:\:(\d+))?`)
 )
 
 type requestParameters struct {
@@ -119,7 +119,7 @@ func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, 
 	}
 
 	if res.Code != api.StatusCodeOK {
-		return fmt.Errorf("Error #%d: %s", res.Code, res.Message)
+		return fmt.Errorf("error #%d: %s", res.Code, res.Message)
 	}
 
 	return nil
@@ -185,7 +185,7 @@ func sendWithdraw(client pb.BioJectServiceClient, prefix *pb.Prefix, nextHop net
 	}
 
 	if res.Code != api.StatusCodeOK {
-		return fmt.Errorf("Error #%d: %s", res.Code, res.Message)
+		return fmt.Errorf("error #%d: %s", res.Code, res.Message)
 	}
 
 	return nil

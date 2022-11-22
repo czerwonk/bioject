@@ -2,7 +2,7 @@ package config
 
 import (
 	"bytes"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,7 +44,7 @@ func TestLoad(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			b, err := ioutil.ReadFile("tests/" + test.configFile)
+			b, err := os.ReadFile("tests/" + test.configFile)
 			if err != nil {
 				t.Fatal(err)
 			}

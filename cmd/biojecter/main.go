@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2018 Daniel Czerwonk
+//
+// SPDX-License-Identifier: MIT
+
 package main
 
 import (

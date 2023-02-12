@@ -12,6 +12,7 @@ import (
 	"github.com/bio-routing/bio-rd/routingtable/locRIB"
 	"github.com/bio-routing/bio-rd/routingtable/vrf"
 	"github.com/pkg/errors"
+	"go.opencensus.io/stats"
 
 	bnet "github.com/bio-routing/bio-rd/net"
 	bgp "github.com/bio-routing/bio-rd/protocols/bgp/server"
@@ -20,9 +21,8 @@ import (
 	"github.com/bio-routing/bio-rd/routingtable/filter"
 	"github.com/bio-routing/bio-rd/routingtable/filter/actions"
 	"github.com/czerwonk/bioject/pkg/config"
+	"github.com/czerwonk/bioject/pkg/tracing"
 	log "github.com/sirupsen/logrus"
-	"go.opencensus.io/stats"
-	"go.opencensus.io/trace"
 )
 
 type bgpServer struct {
@@ -34,13 +34,11 @@ type bgpServer struct {
 func newBGPserver(metrics *Metrics, listenAddress net.IP) *bgpServer {
 	v, _ := vrf.New("master", 254)
 
-	s := &bgpServer{
+	return &bgpServer{
 		vrf:           v,
 		metrics:       metrics,
 		listenAddress: listenAddress,
 	}
-
-	return s
 }
 
 func (bs *bgpServer) start(c *config.Config) error {
@@ -159,7 +157,7 @@ func (bs *bgpServer) peerForSession(sess *config.Session, c *config.Config, f *f
 }
 
 func (bs *bgpServer) addPath(ctx context.Context, pfx *bnet.Prefix, p *route.Path) error {
-	ctx, span := trace.StartSpan(ctx, "BGP.AddPath")
+	ctx, span := tracing.Tracer().Start(ctx, "BGP.AddPath")
 	defer span.End()
 
 	rib := bs.ribForPrefix(pfx)
@@ -178,7 +176,7 @@ func (bs *bgpServer) addPath(ctx context.Context, pfx *bnet.Prefix, p *route.Pat
 }
 
 func (bs *bgpServer) removePath(ctx context.Context, pfx *bnet.Prefix, p *route.Path) bool {
-	ctx, span := trace.StartSpan(ctx, "BGP.RemovePath")
+	ctx, span := tracing.Tracer().Start(ctx, "BGP.RemovePath")
 	defer span.End()
 
 	rib := bs.ribForPrefix(pfx)

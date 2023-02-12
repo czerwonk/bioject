@@ -15,9 +15,9 @@ import (
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/czerwonk/bioject/pkg/api"
 	"github.com/czerwonk/bioject/pkg/database"
+	"github.com/czerwonk/bioject/pkg/tracing"
 	pb "github.com/czerwonk/bioject/proto"
 	log "github.com/sirupsen/logrus"
-	"go.opencensus.io/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -57,7 +57,7 @@ func startAPIServer(listenAddress string, bgp bgpService, db database.RouteStore
 
 func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.Result, error) {
 	log.Info("Received AddRoute request:", req)
-	ctx, span := trace.StartSpan(ctx, "API.AddRoute")
+	ctx, span := tracing.Tracer().Start(ctx, "API.AddRoute")
 	defer span.End()
 
 	pfx, err := s.prefixForRequest(req.Route.Prefix)
@@ -89,7 +89,7 @@ func (s *apiServer) AddRoute(ctx context.Context, req *pb.AddRouteRequest) (*pb.
 
 func (s *apiServer) WithdrawRoute(ctx context.Context, req *pb.WithdrawRouteRequest) (*pb.Result, error) {
 	log.Info("Received WithdrawRoute request:", req)
-	ctx, span := trace.StartSpan(ctx, "API.WithdrawRoute")
+	ctx, span := tracing.Tracer().Start(ctx, "API.WithdrawRoute")
 	defer span.End()
 
 	pfx, err := s.prefixForRequest(req.Route.Prefix)

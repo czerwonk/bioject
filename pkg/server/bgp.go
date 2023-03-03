@@ -6,6 +6,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"time"
 
@@ -32,26 +33,41 @@ type bgpServer struct {
 }
 
 func newBGPserver(metrics *Metrics, listenAddress net.IP) *bgpServer {
-	v, _ := vrf.New("master", 254)
+	vrfReg := vrf.NewVRFRegistry()
+	defaultVRF := vrfReg.CreateVRFIfNotExists(vrf.DefaultVRFName, 0)
 
 	return &bgpServer{
-		vrf:           v,
+		vrf:           defaultVRF,
 		metrics:       metrics,
 		listenAddress: listenAddress,
 	}
 }
 
-func (bs *bgpServer) start(c *config.Config) error {
-	routerID, err := bnet.IPFromString(c.RouterID)
+func (bs *bgpServer) bioBGPServer(id string) (bgp.BGPServer, error) {
+	routerID, err := bnet.IPFromString(id)
 	if err != nil {
-		return errors.Wrap(err, "could not parse router id")
+		return nil, fmt.Errorf("could not parse router id %s: %w", id, err)
 	}
 
-	b := bgp.NewBGPServer(routerID.ToUint32(), []string{bs.listenAddress.String() + ":179"})
-	err = b.Start()
-	if err != nil {
-		return errors.Wrap(err, "unable to start BGP server")
+	bgpCfg := bgp.BGPServerConfig{
+		RouterID:   routerID.ToUint32(),
+		DefaultVRF: bs.vrf,
+		ListenAddrsByVRF: map[string][]string{
+			bs.vrf.Name(): {
+				fmt.Sprintf("%s:179", bs.listenAddress),
+			},
+		},
 	}
+
+	return bgp.NewBGPServer(bgpCfg), nil
+}
+
+func (bs *bgpServer) start(c *config.Config) error {
+	b, err := bs.bioBGPServer(c.RouterID)
+	if err != nil {
+		return fmt.Errorf("could not initialize BGP server: %w", err)
+	}
+	b.Start()
 
 	f, err := bs.exportFilter(c)
 	if err != nil {

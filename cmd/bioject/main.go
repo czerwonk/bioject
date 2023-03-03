@@ -21,7 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version = "0.4.0"
+const version = "0.4.1"
 
 func main() {
 	configFile := flag.String("config-file", "config.yml", "Path to config file")

@@ -42,6 +42,7 @@ func TestLoad(t *testing.T) {
 						Passive:  true,
 					},
 				},
+        Debug: true,
 			},
 		},
 	}

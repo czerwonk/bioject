@@ -24,6 +24,8 @@ type Config struct {
 
 	// Sessions to BGP peers
 	Sessions []*Session `yaml:"sessions"`
+
+	Debug bool `yaml:"debug"`
 }
 
 // Session defines all parameters needed to establish a BGP session with a peer

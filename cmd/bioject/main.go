@@ -21,7 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const version = "0.4.1"
+const version = "0.4.2"
 
 func main() {
 	configFile := flag.String("config-file", "config.yml", "Path to config file")
@@ -41,13 +41,13 @@ func main() {
 		os.Exit(0)
 	}
 
-	if *debug {
-		log.SetLevel(log.DebugLevel)
-	}
-
 	cfg, err := loadConfigFile(*configFile)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if *debug || cfg.Debug {
+		log.SetLevel(log.DebugLevel)
 	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)

@@ -1,5 +1,6 @@
 local_as: 65600
 router_id: "127.0.0.1"
+debug: true
 
 route_filters:
   - net: "2001:678:1e0::"

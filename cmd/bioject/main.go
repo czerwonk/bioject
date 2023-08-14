@@ -18,7 +18,6 @@ import (
 	"github.com/czerwonk/bioject/pkg/server"
 	"github.com/czerwonk/bioject/pkg/tracing"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -42,7 +41,7 @@ func main() {
 		os.Exit(0)
 	}
 
-  logrus.Infof("Staring bioject (Version: %s)", version)
+  log.Infof("Staring bioject (Version: %s)", version)
 
 	cfg, err := loadConfigFile(*configFile)
 	if err != nil {

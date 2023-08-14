@@ -17,12 +17,15 @@ import (
 
 	bnet "github.com/bio-routing/bio-rd/net"
 	bgp "github.com/bio-routing/bio-rd/protocols/bgp/server"
+	blog "github.com/bio-routing/bio-rd/util/log"
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/bio-routing/bio-rd/routingtable"
 	"github.com/bio-routing/bio-rd/routingtable/filter"
 	"github.com/bio-routing/bio-rd/routingtable/filter/actions"
+
 	"github.com/czerwonk/bioject/pkg/config"
 	"github.com/czerwonk/bioject/pkg/tracing"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -33,6 +36,7 @@ type bgpServer struct {
 }
 
 func newBGPserver(metrics *Metrics, listenAddress net.IP) *bgpServer {
+  blog.SetLogger(blog.NewLogrusWrapper(log.StandardLogger()))
 	vrfReg := vrf.NewVRFRegistry()
 	defaultVRF := vrfReg.CreateVRFIfNotExists(vrf.DefaultVRFName, 0)
 

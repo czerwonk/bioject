@@ -18,10 +18,11 @@ import (
 	"github.com/czerwonk/bioject/pkg/server"
 	"github.com/czerwonk/bioject/pkg/tracing"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
-const version = "0.4.2"
+const version = "0.5.0"
 
 func main() {
 	configFile := flag.String("config-file", "config.yml", "Path to config file")
@@ -40,6 +41,8 @@ func main() {
 		showVersion()
 		os.Exit(0)
 	}
+
+  logrus.Infof("Staring bioject (Version: %s)", version)
 
 	cfg, err := loadConfigFile(*configFile)
 	if err != nil {

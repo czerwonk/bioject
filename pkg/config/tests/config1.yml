@@ -14,3 +14,4 @@ sessions:
     local_ip: 2001:678::1
     peer_ip: 2001:678:1e0:b::1
     passive: true
+    multiprotocol_ipv4: true

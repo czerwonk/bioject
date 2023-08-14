@@ -35,11 +35,12 @@ func TestLoad(t *testing.T) {
 				},
 				Sessions: []*Session{
 					{
-						Name:     "session1",
-						RemoteAS: 202739,
-						LocalIP:  "2001:678::1",
-						PeerIP:   "2001:678:1e0:b::1",
-						Passive:  true,
+						Name:                       "session1",
+						RemoteAS:                   202739,
+						LocalIP:                    "2001:678::1",
+						PeerIP:                     "2001:678:1e0:b::1",
+						Passive:                    true,
+						AdvertiseIPv4MultiProtocol: true,
 					},
 				},
 				Debug: true,

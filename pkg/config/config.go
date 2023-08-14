@@ -44,6 +44,9 @@ type Session struct {
 
 	// Passive defines if bioject should initiate a connection or wait to be connected
 	Passive bool `yaml:"passive,omitempty"`
+
+	// MultiProtocol defines if IPv4 routes should be advertised using MP NLRIs
+	AdvertiseIPv4MultiProtocol bool `yaml:"multiprotocol_ipv4"`
 }
 
 // RouteFilter defines all parameters needed to decide wether to accept or to drop a route for a prefix

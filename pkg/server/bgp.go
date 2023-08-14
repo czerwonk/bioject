@@ -36,7 +36,7 @@ type bgpServer struct {
 }
 
 func newBGPserver(metrics *Metrics, listenAddress net.IP) *bgpServer {
-  blog.SetLogger(blog.NewLogrusWrapper(log.StandardLogger()))
+	blog.SetLogger(blog.NewLogrusWrapper(log.StandardLogger()))
 	vrfReg := vrf.NewVRFRegistry()
 	defaultVRF := vrfReg.CreateVRFIfNotExists(vrf.DefaultVRFName, 0)
 
@@ -145,17 +145,18 @@ func (bs *bgpServer) peerForSession(sess *config.Session, c *config.Config, f *f
 	}
 
 	p := bgp.PeerConfig{
-		LocalAS:           c.LocalAS,
-		AdminEnabled:      true,
-		PeerAS:            sess.RemoteAS,
-		PeerAddress:       peerIP.Ptr(),
-		LocalAddress:      localIP.Ptr(),
-		ReconnectInterval: time.Second * 15,
-		HoldTime:          time.Second * 90,
-		KeepAlive:         time.Second * 30,
-		Passive:           sess.Passive,
-		RouterID:          routerID,
-		VRF:               bs.vrf,
+		LocalAS:                    c.LocalAS,
+		AdminEnabled:               true,
+		PeerAS:                     sess.RemoteAS,
+		PeerAddress:                peerIP.Ptr(),
+		LocalAddress:               localIP.Ptr(),
+		ReconnectInterval:          time.Second * 15,
+		HoldTime:                   time.Second * 90,
+		KeepAlive:                  time.Second * 30,
+		Passive:                    sess.Passive,
+		RouterID:                   routerID,
+		VRF:                        bs.vrf,
+		AdvertiseIPv4MultiProtocol: sess.AdvertiseIPv4MultiProtocol,
 	}
 
 	addressFamily := &bgp.AddressFamilyConfig{
@@ -221,3 +222,4 @@ func (bs *bgpServer) ribForPrefix(pfx *bnet.Prefix) *locRIB.LocRIB {
 
 	return bs.vrf.IPv6UnicastRIB()
 }
+

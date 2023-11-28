@@ -16,3 +16,4 @@ cmd/bioject/config.yml
 cmd/bioject/routes.db
 cmd/biojecter/biojecter
 database/test.db
+out/

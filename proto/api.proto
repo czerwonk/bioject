@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+option go_package = "github.com/czerwonk/bioject";
+
 message Result {
     uint32 code = 1;
     string message = 2;

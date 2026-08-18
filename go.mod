@@ -7,7 +7,7 @@ require (
 	github.com/bio-routing/bio-rd v0.1.10
 	github.com/jinzhu/gorm v1.9.16
 	github.com/pkg/errors v0.9.1
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.10.0
 	github.com/stretchr/testify v1.11.1
 	go.opencensus.io v0.24.0
 	golang.org/x/net v0.40.0 // indirect

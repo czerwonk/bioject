@@ -5,6 +5,7 @@
 package server
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -23,8 +24,8 @@ func convertToDatabaseRoute(prefix *bnet.Prefix, path *route.Path) *database.Rou
 	r := &database.Route{
 		Prefix:           prefix.String(),
 		NextHop:          path.BGPPath.BGPPathA.NextHop.String(),
-		LocalPref:        uint(path.BGPPath.BGPPathA.LocalPref),
-		MED:              uint(path.BGPPath.BGPPathA.MED),
+		LocalPref:        path.BGPPath.BGPPathA.LocalPref,
+		MED:              path.BGPPath.BGPPathA.MED,
 		Communities:      communitiesFromBioRoute(path.BGPPath.Communities),
 		LargeCommunities: largeCommunitiesFromBioRoute(path.BGPPath.LargeCommunities),
 	}
@@ -39,11 +40,16 @@ func convertToBioRoute(r *database.Route) (pfx *bnet.Prefix, path *route.Path, e
 		return pfx, path, err
 	}
 
-	length, err := strconv.Atoi(t[1])
+	length, err := strconv.ParseUint(t[1], 10, 8)
 	if err != nil {
 		return pfx, path, err
 	}
-	pfx = bnet.NewPfx(net, uint8(length)).Ptr()
+
+	pfxLen, err := prefixLength(net, length)
+	if err != nil {
+		return pfx, path, err
+	}
+	pfx = bnet.NewPfx(net, pfxLen).Ptr()
 
 	nextHop, err := bnet.IPFromString(r.NextHop)
 	if err != nil {
@@ -55,8 +61,8 @@ func convertToBioRoute(r *database.Route) (pfx *bnet.Prefix, path *route.Path, e
 		BGPPath: &route.BGPPath{
 			BGPPathA: &route.BGPPathA{
 				Source:    &bnet.IP{},
-				LocalPref: uint32(r.LocalPref),
-				MED:       uint32(r.MED),
+				LocalPref: r.LocalPref,
+				MED:       r.MED,
 				NextHop:   &nextHop,
 				EBGP:      true,
 			},
@@ -65,6 +71,18 @@ func convertToBioRoute(r *database.Route) (pfx *bnet.Prefix, path *route.Path, e
 			ASPath:           emptyASPath(),
 		},
 	}, nil
+}
+
+func prefixLength(ip bnet.IP, length uint64) (uint8, error) {
+	if ip.IsIPv4() && length > 32 {
+		return 0, fmt.Errorf("invalid IPv4 prefix length: %d", length)
+	}
+
+	if length > 128 {
+		return 0, fmt.Errorf("invalid IPv6 prefix length: %d", length)
+	}
+
+	return uint8(length), nil
 }
 
 func communitiesFromDatabaseRoute(coms []*database.Community) *types.Communities {

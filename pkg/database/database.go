@@ -6,6 +6,7 @@ package database
 
 import (
 	"context"
+	"errors"
 
 	"github.com/czerwonk/bioject/pkg/tracing"
 	"github.com/jinzhu/gorm"
@@ -27,8 +28,7 @@ func Connect(dialect string, args ...interface{}) (*Database, error) {
 	}
 	err = d.autoMigrate()
 	if err != nil {
-		db.Close()
-		return nil, err
+		return nil, errors.Join(err, db.Close())
 	}
 
 	return d, nil

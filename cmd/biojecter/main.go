@@ -8,6 +8,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"math"
 	"net"
 	"os"
 	"regexp"
@@ -55,11 +56,15 @@ func main() {
 		os.Exit(0)
 	}
 
-	conn, err := grpc.Dial(*apiAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(*apiAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Panic(err)
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Errorf("could not close connection: %v", err)
+		}
+	}()
 
 	client := pb.NewBioJectServiceClient(conn)
 	err = sendRequest(client, p)
@@ -99,11 +104,23 @@ func parsePrefix(s string) (*pb.Prefix, error) {
 	}
 
 	ones, _ := net.Mask.Size()
+	length, err := toUint32(ones, "prefix length")
+	if err != nil {
+		return nil, err
+	}
 
 	return &pb.Prefix{
 		Ip:     ipBytes(ip),
-		Length: uint32(ones),
+		Length: length,
 	}, nil
+}
+
+func toUint32(v int, name string) (uint32, error) {
+	if v < 0 || v > math.MaxUint32 {
+		return 0, fmt.Errorf("%s out of range: %d", name, v)
+	}
+
+	return uint32(v), nil
 }
 
 func ipBytes(ip net.IP) []byte {
@@ -116,7 +133,10 @@ func ipBytes(ip net.IP) []byte {
 }
 
 func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, p *requestParameters) error {
-	req := createAddRouteRequest(pfx, nextHop, p)
+	req, err := createAddRouteRequest(pfx, nextHop, p)
+	if err != nil {
+		return err
+	}
 
 	res, err := client.AddRoute(context.Background(), req)
 	if err != nil {
@@ -130,13 +150,23 @@ func sendUpdate(client pb.BioJectServiceClient, pfx *pb.Prefix, nextHop net.IP, 
 	return nil
 }
 
-func createAddRouteRequest(pfx *pb.Prefix, nextHop net.IP, p *requestParameters) *pb.AddRouteRequest {
+func createAddRouteRequest(pfx *pb.Prefix, nextHop net.IP, p *requestParameters) (*pb.AddRouteRequest, error) {
+	localPref, err := toUint32(p.localPref, "local pref")
+	if err != nil {
+		return nil, err
+	}
+
+	med, err := toUint32(p.med, "MED")
+	if err != nil {
+		return nil, err
+	}
+
 	req := &pb.AddRouteRequest{
 		Route: &pb.Route{
 			Prefix:    pfx,
 			NextHop:   nextHop,
-			LocalPref: uint32(p.localPref),
-			Med:       uint32(p.med),
+			LocalPref: localPref,
+			Med:       med,
 		},
 		Communities:      make([]*pb.Community, 0),
 		LargeCommunities: make([]*pb.LargeCommunity, 0),
@@ -145,35 +175,70 @@ func createAddRouteRequest(pfx *pb.Prefix, nextHop net.IP, p *requestParameters)
 	matches := communityRegex.FindAllStringSubmatch(p.community, -1)
 	for _, m := range matches {
 		if m[3] != "" {
-			req.LargeCommunities = append(req.LargeCommunities, largeCommunityForMatch(m))
+			c, err := largeCommunityForMatch(m)
+			if err != nil {
+				return nil, err
+			}
+			req.LargeCommunities = append(req.LargeCommunities, c)
 		} else {
-			req.Communities = append(req.Communities, communityForMatch(m))
+			c, err := communityForMatch(m)
+			if err != nil {
+				return nil, err
+			}
+			req.Communities = append(req.Communities, c)
 		}
 	}
 
-	return req
+	return req, nil
 }
 
-func largeCommunityForMatch(groups []string) *pb.LargeCommunity {
-	global, _ := strconv.Atoi(groups[1])
-	p1, _ := strconv.Atoi(groups[2])
-	p2, _ := strconv.Atoi(groups[3])
+func parseUint32(s string) (uint32, error) {
+	v, err := strconv.ParseUint(s, 10, 32)
+	if err != nil {
+		return 0, fmt.Errorf("could not parse community part %q: %w", s, err)
+	}
+
+	return uint32(v), nil
+}
+
+func largeCommunityForMatch(groups []string) (*pb.LargeCommunity, error) {
+	global, err := parseUint32(groups[1])
+	if err != nil {
+		return nil, err
+	}
+
+	p1, err := parseUint32(groups[2])
+	if err != nil {
+		return nil, err
+	}
+
+	p2, err := parseUint32(groups[3])
+	if err != nil {
+		return nil, err
+	}
 
 	return &pb.LargeCommunity{
-		GlobalAdministrator: uint32(global),
-		LocalDataPart1:      uint32(p1),
-		LocalDataPart2:      uint32(p2),
-	}
+		GlobalAdministrator: global,
+		LocalDataPart1:      p1,
+		LocalDataPart2:      p2,
+	}, nil
 }
 
-func communityForMatch(groups []string) *pb.Community {
-	asn, _ := strconv.Atoi(groups[1])
-	value, _ := strconv.Atoi(groups[2])
+func communityForMatch(groups []string) (*pb.Community, error) {
+	asn, err := parseUint32(groups[1])
+	if err != nil {
+		return nil, err
+	}
+
+	value, err := parseUint32(groups[2])
+	if err != nil {
+		return nil, err
+	}
 
 	return &pb.Community{
-		Asn:   uint32(asn),
-		Value: uint32(value),
-	}
+		Asn:   asn,
+		Value: value,
+	}, nil
 }
 
 func sendWithdraw(client pb.BioJectServiceClient, prefix *pb.Prefix, nextHop net.IP) error {

@@ -41,7 +41,7 @@ func main() {
 		os.Exit(0)
 	}
 
-  log.Infof("Staring bioject (Version: %s)", version)
+	log.Infof("Staring bioject (Version: %s)", version)
 
 	cfg, err := loadConfigFile(*configFile)
 	if err != nil {
@@ -68,7 +68,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not connect to database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Errorf("could not close database: %v", err)
+		}
+	}()
 
 	log.Fatal(server.Start(cfg, *listenAddress, net.ParseIP(*bgpListenAddress), db, metrics))
 }
@@ -80,7 +84,7 @@ func showVersion() {
 }
 
 func loadConfigFile(path string) (*config.Config, error) {
-	b, err := os.ReadFile(path)
+	b, err := os.ReadFile(path) // #nosec G304 -- path is provided by the operator via CLI flag
 	if err != nil {
 		return nil, fmt.Errorf("could not read config file: %s", err)
 	}

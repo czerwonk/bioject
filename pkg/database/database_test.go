@@ -42,9 +42,11 @@ func TestSave(t *testing.T) {
 	}
 
 	d := connectTestDB()
-	defer d.Close()
+	defer closeTestDB(t, d)
 
-	d.Save(context.Background(), route)
+	if err := d.Save(context.Background(), route); err != nil {
+		t.Fatal(err)
+	}
 
 	var r Route
 	d.db.Preload("Communities").Preload("LargeCommunities").First(&r)
@@ -62,7 +64,7 @@ func TestSave(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	d := connectTestDB()
-	defer d.Close()
+	defer closeTestDB(t, d)
 
 	r1 := insert(d, NewRoute("185.138.52.1/32", "192.168.2.1"), t)
 	insert(d, NewRoute("185.138.52.0/32", "192.168.2.1"), t)
@@ -88,7 +90,7 @@ func TestDelete(t *testing.T) {
 
 func TestRoutes(t *testing.T) {
 	d := connectTestDB()
-	defer d.Close()
+	defer closeTestDB(t, d)
 
 	r1 := insert(d, NewRoute("185.138.52.1/32", "192.168.2.1").AddLargeCommunity(202739, 123, 456), t)
 	r2 := insert(d, NewRoute("185.138.52.0/32", "192.168.2.1").AddCommunity(48821, 123), t)
@@ -136,4 +138,10 @@ func connectTestDB() *Database {
 	d.db.LogMode(true)
 
 	return d
+}
+
+func closeTestDB(t *testing.T, d *Database) {
+	if err := d.Close(); err != nil {
+		t.Errorf("could not close test database: %v", err)
+	}
 }

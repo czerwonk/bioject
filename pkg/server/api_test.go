@@ -353,3 +353,52 @@ func TestPathForRoute(t *testing.T) {
 		})
 	}
 }
+
+func TestPrefixForRequest(t *testing.T) {
+	tests := []struct {
+		name     string
+		prefix   *pb.Prefix
+		expected *bnet.Prefix
+		wantFail bool
+	}{
+		{
+			name:     "valid IPv4 prefix",
+			prefix:   &pb.Prefix{Ip: []byte{185, 138, 52, 0}, Length: 24},
+			expected: bnet.NewPfx(bnet.IPv4FromOctets(185, 138, 52, 0), 24).Ptr(),
+		},
+		{
+			name:     "valid IPv6 prefix",
+			prefix:   &pb.Prefix{Ip: []byte{0x20, 0x01, 0x06, 0x78, 0x01, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, Length: 48},
+			expected: bnet.NewPfx(bnet.IPv6FromBlocks(0x2001, 0x0678, 0x01e0, 0, 0, 0, 0, 0), 48).Ptr(),
+		},
+		{
+			name:     "IPv4 prefix length too large",
+			prefix:   &pb.Prefix{Ip: []byte{185, 138, 52, 0}, Length: 33},
+			wantFail: true,
+		},
+		{
+			name:     "IPv6 prefix length too large",
+			prefix:   &pb.Prefix{Ip: []byte{0x20, 0x01, 0x06, 0x78, 0x01, 0xe0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, Length: 129},
+			wantFail: true,
+		},
+		{
+			name:     "prefix length overflowing uint8",
+			prefix:   &pb.Prefix{Ip: []byte{185, 138, 52, 0}, Length: 280},
+			wantFail: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			s := &apiServer{}
+			pfx, err := s.prefixForRequest(test.prefix)
+			if test.wantFail {
+				assert.Error(t, err, "expected error for invalid prefix length")
+				return
+			}
+
+			assert.NoError(t, err, "unexpected error")
+			assert.Equal(t, test.expected, pfx, "prefix")
+		})
+	}
+}

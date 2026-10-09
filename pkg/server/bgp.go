@@ -17,11 +17,11 @@ import (
 
 	bnet "github.com/bio-routing/bio-rd/net"
 	bgp "github.com/bio-routing/bio-rd/protocols/bgp/server"
-	blog "github.com/bio-routing/bio-rd/util/log"
 	"github.com/bio-routing/bio-rd/route"
 	"github.com/bio-routing/bio-rd/routingtable"
 	"github.com/bio-routing/bio-rd/routingtable/filter"
 	"github.com/bio-routing/bio-rd/routingtable/filter/actions"
+	blog "github.com/bio-routing/bio-rd/util/log"
 
 	"github.com/czerwonk/bioject/pkg/config"
 	"github.com/czerwonk/bioject/pkg/tracing"
@@ -79,7 +79,9 @@ func (bs *bgpServer) start(c *config.Config) error {
 	}
 
 	for _, sess := range c.Sessions {
-		bs.addPeer(sess, c, f, b)
+		if err := bs.addPeer(sess, c, f, b); err != nil {
+			return fmt.Errorf("could not add peer for session %s: %w", sess.Name, err)
+		}
 	}
 
 	return nil
@@ -129,8 +131,7 @@ func (bs *bgpServer) addPeer(sess *config.Session, c *config.Config, f *filter.F
 		return err
 	}
 
-	b.AddPeer(p)
-	return nil
+	return b.AddPeer(p)
 }
 
 func (bs *bgpServer) peerForSession(sess *config.Session, c *config.Config, f *filter.Filter, routerID uint32) (bgp.PeerConfig, error) {
@@ -222,4 +223,3 @@ func (bs *bgpServer) ribForPrefix(pfx *bnet.Prefix) *locRIB.LocRIB {
 
 	return bs.vrf.IPv6UnicastRIB()
 }
-

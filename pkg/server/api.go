@@ -140,7 +140,12 @@ func (s *apiServer) prefixForRequest(pfx *pb.Prefix) (*bnet.Prefix, error) {
 		return &bnet.Prefix{}, err
 	}
 
-	return bnet.NewPfx(ip, uint8(pfx.Length)).Ptr(), nil
+	length, err := prefixLength(ip, uint64(pfx.Length))
+	if err != nil {
+		return &bnet.Prefix{}, err
+	}
+
+	return bnet.NewPfx(ip, length).Ptr(), nil
 }
 
 func (s *apiServer) addCommunitiesToBGPPath(p *route.BGPPath, req *pb.AddRouteRequest) error {

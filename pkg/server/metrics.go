@@ -6,6 +6,7 @@ package server
 
 import (
 	"net/http"
+	"time"
 
 	"contrib.go.opencensus.io/exporter/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -71,6 +72,10 @@ func (m *Metrics) RegisterEndpoint(addr string) {
 
 	go func() {
 		log.Infof("Start listening for metrics requests at http://%s/metrics", addr)
-		log.Fatal(http.ListenAndServe(addr, nil))
+		srv := &http.Server{
+			Addr:              addr,
+			ReadHeaderTimeout: 10 * time.Second,
+		}
+		log.Fatal(srv.ListenAndServe())
 	}()
 }

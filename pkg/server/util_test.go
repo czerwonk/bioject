@@ -90,3 +90,23 @@ func TestConvertToDatabaseRoute(t *testing.T) {
 
 	assert.Equal(t, expected, r)
 }
+
+func TestConvertToBioRouteInvalidPrefixLength(t *testing.T) {
+	tests := []struct {
+		name   string
+		prefix string
+	}{
+		{name: "IPv4 length too large", prefix: "185.138.52.0/33"},
+		{name: "IPv6 length too large", prefix: "2001:678:1e0::/129"},
+		{name: "length overflowing uint8", prefix: "185.138.52.0/280"},
+		{name: "negative length", prefix: "185.138.52.0/-1"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			r := database.NewRoute(test.prefix, "192.168.2.1")
+			_, _, err := convertToBioRoute(r)
+			assert.Error(t, err, "expected error for prefix %s", test.prefix)
+		})
+	}
+}

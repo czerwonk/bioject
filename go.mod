@@ -1,6 +1,6 @@
 module github.com/czerwonk/bioject
 
-go 1.27.2
+go 1.26.9
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2

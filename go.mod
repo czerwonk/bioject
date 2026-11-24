@@ -1,6 +1,6 @@
 module github.com/czerwonk/bioject
 
-go 1.26.11
+go 1.27.4
 
 require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2
@@ -51,7 +51,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.5 // indirect
-	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	go.yaml.in/yaml/v3 v3.0.6 // indirect
 	golang.org/x/net v0.63.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
 	golang.org/x/text v0.44.0 // indirect
